@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #E0E0E0;
+        }
+        .container {
+            min-height: 100vh;
+        }
+        #visualizerCanvas {
+            width: 100%;
+            height: 400px; /* Increased height for when panels are hidden */
+            background-color: #181818;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: height 0.3s ease;
+        }
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .btn {
+            border: 2px solid #3B82F6; /* Changed from purple to blue */
+            color: #3B82F6; /* Changed from purple to blue */
+            background-color: transparent;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #3B82F6; /* Changed from purple to blue */
+            color: white;
+        }
+        .toggle-btn {
+            background-color: #374151;
+            color: #D1D5DB;
+            padding: 8px 16px;
+        }
+        .toggle-btn:hover {
+            background-color: #4B5563;
+        }
+        .toggle-btn.active {
+            background-color: #3B82F6; /* Changed from purple to blue */
+            color: white;
+        }
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        #songQueueList li {
+            padding: 12px 16px;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-align: left;
+        }
+        #songQueueList li:hover {
+            background-color: #374151;
+        }
+        #songQueueList li.playing {
+            background-color: #3B82F6; /* Changed from purple to blue */
+            color: white;
+            font-weight: 600;
+        }
+        .settings-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #D1D5DB;
+        }
+        .settings-input {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4B5563;
+            color: white;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+        }
+        .settings-input[type="color"] {
+            padding: 0.1rem;
+            height: 2.5rem;
+        }
+        .icon-btn {
+            background-color: #374151;
+            color: #D1D5DB;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn:hover {
+            background-color: #4B5563;
+        }
+        .material-icons {
+            font-size: 24px;
+        }
+        /* Fullscreen styles for canvas */
+        canvas:-webkit-full-screen {
+            width: 100%;
+            height: 100%;
+        }
+        canvas:-moz-full-screen {
+            width: 100%;
+            height: 100%;
+        }
+        canvas:-ms-fullscreen {
+            width: 100%;
+            height: 100%;
+        }
+        canvas:full-screen {
+            width: 100%;
+            height: 100%;
+        }
+        canvas:-webkit-full-screen {
+            width: 100%;
+            height: 100%;
+        }
+        .settings-section-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+            color: #E0E0E0; /* text-gray-200 */
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 1rem; /* mb-4 */
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #4B5563; /* border-gray-600 */
+        }
+        /* Styles for the new settings menu layout */
+        .settings-nav-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            color: #D1D5DB;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            text-align: left;
+        }
+        .settings-nav-item:hover {
+            background-color: #4B5563;
+        }
+        .settings-nav-item.active {
+            background-color: #3B82F6; /* Changed from purple to blue */
+            color: white;
+            font-weight: 600;
+        }
+        .settings-section {
+            /* Managed by JS for display: none/block */
+        }
+        /* Hide section titles on larger screens where nav provides context */
+        @media (min-width: 768px) { /* md breakpoint */
+            .settings-section-title.md-hidden {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-center">
+        <div class="w-full max-w-7xl text-center">
+            
+            <header class="mb-4">
+                <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">Audio Visualizer</h1>
+                <p class="text-lg text-gray-400">Upload your favorite tracks and watch the sound come to life.</p>
+            </header>
+
+            <!-- Main Content Area -->
+            <div id="mainContent" class="w-full">
+                <!-- Top controls -->
+                <div class="flex justify-between items-center mb-4">
+                    <div id="infoBox" class="text-left">
+                        <p id="trackName" class="text-lg font-semibold text-white">No track loaded</p>
+                        <p id="trackStatus" class="text-gray-400">Add songs to the queue</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="upload-btn-wrapper">
+                            <button class="btn" id="addSongsButton">Add Songs</button>
+                            <input type="file" id="audioFileInput" accept="audio/*" multiple />
+                        </div>
+                        <button id="toggleQueueBtn" class="btn toggle-btn">Queue</button>
+                        <button id="toggleSettingsBtn" class="btn toggle-btn">Settings</button>
+                        <button id="fullscreenBtn" class="icon-btn" title="Toggle Fullscreen">
+                            <span class="material-icons">fullscreen</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Visualizer Canvas -->
+                <canvas id="visualizerCanvas"></canvas>
+
+                <!-- Music Playback Controls (Moved Below Canvas) -->
+                <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mt-4 mb-4">
+                    <button id="mixQueueBtn" class="btn w-full sm:w-auto">MIX QUE</button>
+                    <div class="flex items-center space-x-4 w-full sm:w-auto justify-center">
+                        <button id="prevTrackBtn" class="icon-btn" title="Previous Track">
+                            <span class="material-icons">skip_previous</span>
+                        </button>
+                        <button id="playPauseBtn" class="icon-btn" title="Play/Pause">
+                            <span class="material-icons">play_arrow</span>
+                        </button>
+                        <button id="nextTrackBtn" class="icon-btn" title="Next Track">
+                            <span class="material-icons">skip_next</span>
+                        </button>
+                    </div>
+                    <select id="repeatModeSelect" class="settings-input w-full sm:w-auto">
+                        <option value="off">REPEAT (Off)</option>
+                        <option value="song">REPEAT (Song)</option>
+                        <option value="queue">REPEAT (Queue)</option>
+                    </select>
+                    <button id="toggleTrackInfoBtn" class="btn toggle-btn w-full sm:w-auto">Track Info</button>
+                </div>
+
+                <!-- New: Current / Total Time Display -->
+                <div id="timeDisplay" class="text-lg font-semibold text-gray-300 mt-2 mb-4">
+                    0:00 / 0:00
+                </div>
+            </div>
+
+            <!-- Side Panels Container -->
+            <div id="sidePanelsContainer" class="w-full flex flex-col gap-8 mt-4 hidden">
+                <!-- Song Queue -->
+                <div id="queuePanel" class="bg-gray-800 p-4 rounded-lg shadow-lg hidden w-full">
+                    <h2 class="text-2xl font-bold text-white mb-4 text-left">Song Queue</h2>
+                    <!-- Track Info Section (Moved inside Queue Panel) -->
+                    <div id="queueTrackInfoSection" class="flex flex-col items-center space-y-4 mb-6 p-4 bg-gray-700 rounded-lg hidden">
+                        <h3 class="text-xl font-semibold text-white">Currently Playing</h3>
+                        <img id="trackCoverImage" src="https://placehold.co/150x150/374151/D1D5DB?text=No+Cover" alt="Album Cover" class="w-40 h-40 rounded-lg shadow-md">
+                        <p id="infoTrackName" class="text-xl font-semibold text-white"></p>
+                        <p id="infoArtist" class="text-lg text-gray-300"></p>
+                        <p id="infoQuality" class="text-md text-gray-400"></p>
+                        <p id="infoTime" class="text-md text-gray-400"></p>
+                    </div>
+                    <ul id="songQueueList" class="max-h-80 overflow-y-auto rounded-md"></ul>
+                </div>
+                <!-- Settings Panel with new layout -->
+                <div id="settingsPanel" class="bg-gray-800 p-4 rounded-lg shadow-lg hidden w-full md:flex md:flex-row">
+                    <!-- Navigation Sidebar -->
+                    <div id="settingsNav" class="w-full md:w-1/4 md:pr-4 md:border-r md:border-gray-700">
+                        <h2 class="text-2xl font-bold text-white mb-4 text-left md:hidden">Settings Categories</h2>
+                        <ul class="space-y-2 text-left">
+                            <li><a href="#" class="settings-nav-item active" data-category="visualizerAppearance">Visualizer Appearance</a></li>
+                            <li><a href="#" class="settings-nav-item" data-category="imageBackground">Image & Background Settings</a></li>
+                        </ul>
+                    </div>
+                    <!-- Content Area -->
+                    <div id="settingsContent" class="w-full md:w-3/4 md:pl-4 mt-4 md:mt-0">
+                        <!-- Visualizer Appearance Section -->
+                        <div id="visualizerAppearanceSection" class="settings-section">
+                            <h3 class="settings-section-title md-hidden">Visualizer Appearance</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="colorPicker" class="settings-label">Visualizer Color</label>
+                                    <input type="color" id="colorPicker" value="#3B82F6" class="settings-input">
+                                </div>
+                                <div>
+                                    <label for="modeSelector" class="settings-label">Mode</label>
+                                    <select id="modeSelector" class="settings-input">
+                                        <option value="bars">Bars</option>
+                                        <option value="circularBars">Circular Bars</option>
+                                        <option value="circles">Circles</option>
+                                        <option value="waves">Waves</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Sensitivity is now visible -->
+                                <div>
+                                    <label for="sensitivitySlider" class="settings-label">Sensitivity</label>
+                                    <input type="range" id="sensitivitySlider" min="0.5" max="5.0" value="1.6" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                
+                                <!-- Visualizer Color Gradients -->
+                                <div class="pt-4 border-t border-gray-700">
+                                    <label class="settings-label flex items-center">
+                                        <input type="checkbox" id="enableWaveGradient" class="mr-2" checked>
+                                        Enable Visualizer Color Gradient
+                                    </label>
+                                    <div id="waveGradientColors" class="space-y-2 mt-2">
+                                        <div>
+                                            <label for="waveGradientLowColor" class="settings-label">Gradient Low Color (Red)</label>
+                                            <input type="color" id="waveGradientLowColor" value="#FF0000" class="settings-input">
+                                        </div>
+                                        <div>
+                                            <label for="waveGradientHighColor" class="settings-label">Gradient High Color (Blue)</label>
+                                            <input type="color" id="waveGradientHighColor" value="#0000FF" class="settings-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- New: Show Hz Lines -->
+                                <div class="pt-4 border-t border-gray-700">
+                                    <label class="settings-label flex items-center">
+                                        <input type="checkbox" id="showHzLinesCheckbox" class="mr-2">
+                                        Show Hz Lines
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image & Background Settings Section -->
+                        <div id="imageBackgroundSection" class="settings-section hidden">
+                            <h3 class="settings-section-title md-hidden">Image & Background Settings</h3>
+                            <div class="space-y-4">
+                                <!-- Center Image for Circular Modes -->
+                                <div>
+                                    <label for="centerImageInput" class="settings-label">Center Image (Circular Modes)</label>
+                                    <div class="upload-btn-wrapper w-full">
+                                        <button class="btn w-full">Upload Image</button>
+                                        <input type="file" id="centerImageInput" accept="image/*" />
+                                    </div>
+                                    <input type="text" id="centerImageUrlInput" placeholder="Or enter image URL" class="settings-input mt-2">
+                                </div>
+
+                                <!-- Background Image/Color -->
+                                <div>
+                                    <label for="backgroundImageInput" class="settings-label">Background Image (Upload)</label>
+                                    <div class="upload-btn-wrapper w-full">
+                                        <button class="btn w-full">Upload Background Image</button>
+                                        <input type="file" id="backgroundImageInput" accept="image/*" />
+                                    </div>
+                                    <label for="backgroundImageUrlInput" class="settings-label mt-2">Background Image URL</label>
+                                    <input type="text" id="backgroundImageUrlInput" placeholder="Or enter image URL" class="settings-input">
+                                </div>
+                                <div>
+                                    <label for="backgroundColorPicker" class="settings-label">Background Color</label>
+                                    <input type="color" id="backgroundColorPicker" value="#181818" class="settings-input">
+                                </div>
+                            </div>
+                        </div>
+                        <button id="resetSettingsBtn" class="btn w-full mt-6">Reset Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio element (hidden) -->
+            <audio id="audioPlayer" class="w-full mt-6 hidden"></audio>
+            
+            <!-- Copyright Footer -->
+            <footer class="mt-12 text-center text-gray-500 text-sm">
+                <p>Copyright (C) 2025 Real_EpicGamer & American Remixing | ALL RIGHTS RESERVED</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const canvas = document.getElementById('visualizerCanvas');
+        const canvasCtx = canvas.getContext('2d');
+        const audioFileInput = document.getElementById('audioFileInput');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const trackNameEl = document.getElementById('trackName');
+        const trackStatusEl = document.getElementById('trackStatus');
+        const songQueueListEl = document.getElementById('songQueueList');
+        
+        // Playback Controls
+        const mixQueueBtn = document.getElementById('mixQueueBtn');
+        const prevTrackBtn = document.getElementById('prevTrackBtn');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const nextTrackBtn = document.getElementById('nextTrackBtn');
+        const repeatModeSelect = document.getElementById('repeatModeSelect');
+        const toggleTrackInfoBtn = document.getElementById('toggleTrackInfoBtn');
+        const timeDisplayEl = document.getElementById('timeDisplay');
+
+        // Settings & Panels
+        const colorPicker = document.getElementById('colorPicker');
+        const modeSelector = document.getElementById('modeSelector');
+        const sensitivitySlider = document.getElementById('sensitivitySlider'); // Reference to the sensitivity slider
+        const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+        const toggleQueueBtn = document.getElementById('toggleQueueBtn');
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const sidePanelsContainer = document.getElementById('sidePanelsContainer');
+        const queuePanel = document.getElementById('queuePanel');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const addSongsButton = document.getElementById('addSongsButton');
+
+        // Settings Inputs
+        const centerImageInput = document.getElementById('centerImageInput');
+        const centerImageUrlInput = document.getElementById('centerImageUrlInput');
+        const backgroundImageInput = document.getElementById('backgroundImageInput');
+        const backgroundImageUrlInput = document.getElementById('backgroundImageUrlInput');
+        const backgroundColorPicker = document.getElementById('backgroundColorPicker');
+        const enableWaveGradientCheckbox = document.getElementById('enableWaveGradient');
+        const waveGradientLowColorPicker = document.getElementById('waveGradientLowColor');
+        const waveGradientHighColorPicker = document.getElementById('waveGradientHighColor');
+        const showHzLinesCheckbox = document.getElementById('showHzLinesCheckbox');
+
+        // Settings Menu Elements
+        const settingsNav = document.getElementById('settingsNav');
+        const settingsNavItems = document.querySelectorAll('.settings-nav-item');
+        const visualizerAppearanceSection = document.getElementById('visualizerAppearanceSection');
+        const imageBackgroundSection = document.getElementById('imageBackgroundSection');
+
+        // Track Info Display Elements (now inside queuePanel)
+        const queueTrackInfoSection = document.getElementById('queueTrackInfoSection'); // Reference to the track info section within queue panel
+        const infoTrackNameEl = document.getElementById('infoTrackName');
+        const infoArtistEl = document.getElementById('infoArtist');
+        const infoQualityEl = document.getElementById('infoQuality');
+        const infoTimeEl = document.getElementById('infoTime');
+        const trackCoverImageEl = document.getElementById('trackCoverImage');
+
+        // --- App State ---
+        let songQueue = [];
+        let currentTrackIndex = -1;
+        let isPlaying = false;
+
+        // Default settings including new ones
+        const defaultSettings = {
+            color: '#3B82F6', // Changed default color to blue
+            mode: 'bars',
+            sensitivity: 1.6, // Adjusted default sensitivity to ~25% of the range
+            centerImage: null,
+            centerImageUrl: '',
+            backgroundImage: null,
+            backgroundImageUrl: '',
+            backgroundColor: '#181818',
+            enableWaveGradient: true,
+            waveGradientLowColor: '#FF0000',
+            waveGradientHighColor: '#0000FF',
+            repeatMode: 'off',
+            showHzLines: false
+        };
+        let visualizerSettings = { ...defaultSettings };
+
+        // --- Web Audio API Setup ---
+        let audioContext;
+        let analyser;
+        let source;
+        let dataArray;
+        let bufferLength;
+
+        // --- Canvas Setup ---
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvasCtx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', setupCanvas);
+        setupCanvas();
+
+        // --- UI Toggle Logic ---
+        function togglePanel(panelToToggle) {
+            const isQueue = panelToToggle === 'queue';
+            const isSettings = panelToToggle === 'settings';
+            const isTrackInfo = panelToToggle === 'trackInfo'; // Refers to the nested section
+
+            // Handle Track Info toggle (always within Queue panel)
+            if (isTrackInfo) {
+                // If Track Info is clicked, ensure Queue panel is open
+                if (queuePanel.classList.contains('hidden')) {
+                    // Close settings if open, then open queue
+                    settingsPanel.classList.add('hidden');
+                    toggleSettingsBtn.classList.remove('active');
+                    queuePanel.classList.remove('hidden');
+                    toggleQueueBtn.classList.add('active');
+                    sidePanelsContainer.classList.remove('hidden');
+                }
+                // Toggle visibility of the nested track info section and its button
+                queueTrackInfoSection.classList.toggle('hidden');
+                toggleTrackInfoBtn.classList.toggle('active');
+                updateTrackInfoDisplay(); // Update content when shown/hidden
+                return; // Exit as track info is handled
+            }
+
+            // For Queue and Settings toggles (main panels)
+            let targetPanel = isQueue ? queuePanel : settingsPanel;
+            let targetButton = isQueue ? toggleQueueBtn : toggleSettingsBtn;
+            let otherPanel = isQueue ? settingsPanel : queuePanel;
+            let otherButton = isQueue ? toggleSettingsBtn : toggleQueueBtn;
+
+            // If the target main panel is currently visible, close it
+            if (!targetPanel.classList.contains('hidden')) {
+                targetPanel.classList.add('hidden');
+                targetButton.classList.remove('active');
+                // If closing queue, also hide the nested track info section and its button
+                if (isQueue) {
+                    queueTrackInfoSection.classList.add('hidden');
+                    toggleTrackInfoBtn.classList.remove('active');
+                }
+            } else {
+                // If the target main panel is hidden, open it
+                targetPanel.classList.remove('hidden');
+                targetButton.classList.add('active');
+                sidePanelsContainer.classList.remove('hidden'); // Ensure container is visible
+
+                // Close the other main panel if it's open
+                if (!otherPanel.classList.contains('hidden')) {
+                    otherPanel.classList.add('hidden');
+                    otherButton.classList.remove('active');
+                    // If the other panel was queue, hide its nested track info section
+                    if (otherPanel === queuePanel) {
+                        queueTrackInfoSection.classList.add('hidden');
+                        toggleTrackInfoBtn.classList.remove('active');
+                    }
+                }
+                
+                // Specific actions when opening settings
+                if (isSettings) {
+                    showSettingsCategory('visualizerAppearance');
+                }
+                // When opening queue, track info section remains hidden by default unless explicitly toggled
+                if (isQueue) {
+                    queueTrackInfoSection.classList.add('hidden'); // Ensure it's hidden when queue opens normally
+                    toggleTrackInfoBtn.classList.remove('active');
+                }
+            }
+
+            // Finally, check if any main panel is still active to control sidePanelsContainer visibility
+            const anyMainPanelActive = !queuePanel.classList.contains('hidden') || !settingsPanel.classList.contains('hidden');
+            if (!anyMainPanelActive) {
+                sidePanelsContainer.classList.add('hidden');
+            }
+        }
+
+        toggleQueueBtn.addEventListener('click', () => togglePanel('queue'));
+        toggleSettingsBtn.addEventListener('click', () => togglePanel('settings'));
+        toggleTrackInfoBtn.addEventListener('click', () => togglePanel('trackInfo'));
+
+        // --- "Add Songs" Button and Track Info Integration ---
+        addSongsButton.addEventListener('click', () => {
+            // This will trigger the file input click
+            audioFileInput.click();
+            // Then, open the queue panel and show the track info section within it
+            togglePanel('trackInfo'); // This will open queuePanel and show queueTrackInfoSection
+        });
+
+        // --- Settings Menu Category Logic ---
+        function showSettingsCategory(categoryName) {
+            // Hide all content sections
+            visualizerAppearanceSection.classList.add('hidden');
+            imageBackgroundSection.classList.add('hidden');
+
+            // Remove active class from all nav items
+            settingsNavItems.forEach(item => item.classList.remove('active'));
+
+            // Show the selected section and set active nav item
+            if (categoryName === 'visualizerAppearance') {
+                visualizerAppearanceSection.classList.remove('hidden');
+                settingsNav.querySelector('[data-category="visualizerAppearance"]').classList.add('active');
+            } else if (categoryName === 'imageBackground') {
+                imageBackgroundSection.classList.remove('hidden');
+                settingsNav.querySelector('[data-category="imageBackground"]').classList.add('active');
+            }
+        }
+
+        // Event listeners for settings navigation items
+        settingsNavItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default link behavior
+                const category = e.target.dataset.category;
+                showSettingsCategory(category);
+            });
+        });
+
+        // --- Settings Handlers ---
+        colorPicker.addEventListener('input', (e) => visualizerSettings.color = e.target.value);
+        modeSelector.addEventListener('change', (e) => visualizerSettings.mode = e.target.value);
+        
+        // Sensitivity slider input handler
+        sensitivitySlider.addEventListener('input', (e) => {
+            visualizerSettings.sensitivity = parseFloat(e.target.value);
+        });
+
+        // Handle center image upload
+        centerImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        visualizerSettings.centerImage = img;
+                        visualizerSettings.centerImageUrl = ''; // Clear URL if file uploaded
+                    };
+                    img.onerror = () => {
+                        console.error('Failed to load image from file.');
+                        visualizerSettings.centerImage = null;
+                        visualizerSettings.centerImageUrl = '';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                visualizerSettings.centerImage = null;
+            }
+            centerImageUrlInput.value = ''; // Clear URL input when file is selected
+        });
+
+        // Handle center image URL input
+        centerImageUrlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            visualizerSettings.centerImageUrl = url;
+            if (url) {
+                const img = new Image();
+                img.onload = () => {
+                    visualizerSettings.centerImage = img;
+                };
+                img.onerror = () => {
+                    console.error('Failed to load image from URL:', url);
+                    visualizerSettings.centerImage = null;
+                };
+                img.src = url;
+            } else {
+                visualizerSettings.centerImage = null;
+            }
+            centerImageInput.value = ''; // Clear file input when URL is entered
+        });
+
+        // New: Handle background image upload
+        backgroundImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        visualizerSettings.backgroundImage = img;
+                        visualizerSettings.backgroundImageUrl = ''; // Clear URL if file uploaded
+                    };
+                    img.onerror = () => {
+                        console.error('Failed to load background image from file.');
+                        visualizerSettings.backgroundImage = null;
+                        visualizerSettings.backgroundImageUrl = '';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                visualizerSettings.backgroundImage = null;
+            }
+            backgroundImageUrlInput.value = ''; // Clear URL input when file is selected
+        });
+
+        // Handle background image URL input
+        backgroundImageUrlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            visualizerSettings.backgroundImageUrl = url;
+            if (url) {
+                const img = new Image();
+                img.onload = () => {
+                    visualizerSettings.backgroundImage = null; // Clear uploaded image if URL entered
+                };
+                img.onerror = () => {
+                    console.error('Failed to load background image from URL:', url);
+                };
+                img.src = url;
+            }
+            backgroundImageInput.value = ''; // Clear file input when URL is entered
+        });
+
+        // Handle background color input
+        backgroundColorPicker.addEventListener('input', (e) => {
+            visualizerSettings.backgroundColor = e.target.value;
+        });
+
+        // Wave Gradient Handlers
+        enableWaveGradientCheckbox.addEventListener('change', (e) => {
+            visualizerSettings.enableWaveGradient = e.target.checked;
+        });
+        waveGradientLowColorPicker.addEventListener('input', (e) => {
+            visualizerSettings.waveGradientLowColor = e.target.value;
+        });
+        waveGradientHighColorPicker.addEventListener('input', (e) => {
+            visualizerSettings.waveGradientHighColor = e.target.value;
+        });
+
+        // Hz Lines checkbox handler
+        showHzLinesCheckbox.addEventListener('change', (e) => {
+            visualizerSettings.showHzLines = e.target.checked;
+        });
+
+        repeatModeSelect.addEventListener('change', (e) => {
+            visualizerSettings.repeatMode = e.target.value;
+        });
+
+        resetSettingsBtn.addEventListener('click', () => {
+            visualizerSettings = { ...defaultSettings };
+            // Reset UI elements
+            colorPicker.value = visualizerSettings.color;
+            modeSelector.value = visualizerSettings.mode;
+            sensitivitySlider.value = visualizerSettings.sensitivity; // Reset sensitivity slider
+            centerImageInput.value = ''; // Clear file input
+            centerImageUrlInput.value = '';
+            backgroundImageInput.value = ''; // Clear background file input
+            backgroundImageUrlInput.value = '';
+            backgroundColorPicker.value = visualizerSettings.backgroundColor;
+            // Reset gradient settings
+            enableWaveGradientCheckbox.checked = visualizerSettings.enableWaveGradient;
+            waveGradientLowColorPicker.value = visualizerSettings.waveGradientLowColor;
+            waveGradientHighColorPicker.value = visualizerSettings.waveGradientHighColor;
+            // Reset Hz lines checkbox
+            showHzLinesCheckbox.checked = visualizerSettings.showHzLines;
+            repeatModeSelect.value = visualizerSettings.repeatMode; // Reset repeat mode
+
+            showSettingsCategory('visualizerAppearance'); // Show default category after reset
+        });
+
+        // --- Fullscreen Logic ---
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                canvas.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                // When entering fullscreen, adjust canvas to fill screen
+                canvas.style.width = '100vw';
+                canvas.style.height = '100vh';
+                setupCanvas(); // Recalculate canvas dimensions
+            } else {
+                // When exiting fullscreen, revert to original size
+                canvas.style.width = '100%';
+                canvas.style.height = '400px'; // Or whatever your default height is
+                setupCanvas(); // Recalculate canvas dimensions
+            }
+        });
+
+        // --- Core Functions ---
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                source = audioContext.createMediaElementSource(audioPlayer);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                analyser.fftSize = 512;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+            }
+        }
+
+        audioFileInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+            for (const file of files) songQueue.push(file);
+            renderQueue();
+            if (!isPlaying && songQueue.length > 0) {
+                playSong(currentTrackIndex === -1 ? 0 : currentTrackIndex);
+            }
+            audioFileInput.value = ''; 
+        });
+
+        function playSong(index) {
+            if (index < 0 || index >= songQueue.length) return;
+            initAudioContext();
+            currentTrackIndex = index;
+            const file = songQueue[index];
+            if (audioPlayer.src) URL.revokeObjectURL(audioPlayer.src);
+            const fileURL = URL.createObjectURL(file);
+            audioPlayer.src = fileURL;
+            audioPlayer.play();
+            isPlaying = true; // Ensure isPlaying is true when playSong is called
+            trackNameEl.textContent = file.name;
+            updatePlayPauseButton(); // Update button icon
+            renderQueue();
+            updateTrackInfoDisplay(); // Update track info when song changes
+        }
+
+        function togglePlayPause() {
+            if (audioPlayer.paused) {
+                if (songQueue.length > 0) {
+                    if (currentTrackIndex === -1) { // If no song has been played yet
+                        playSong(0);
+                    } else {
+                        audioPlayer.play();
+                        isPlaying = true;
+                        trackStatusEl.textContent = 'Playing...';
+                    }
+                } else {
+                    trackStatusEl.textContent = 'No songs in queue. Add some!';
+                }
+            } else {
+                audioPlayer.pause();
+                isPlaying = false;
+                trackStatusEl.textContent = 'Paused';
+            }
+            updatePlayPauseButton();
+        }
+
+        function updatePlayPauseButton() {
+            if (audioPlayer.paused) {
+                playPauseBtn.querySelector('.material-icons').textContent = 'play_arrow';
+            } else {
+                playPauseBtn.querySelector('.material-icons').textContent = 'pause';
+            }
+        }
+
+        function playPrevious() {
+            if (songQueue.length === 0) return;
+            let newIndex = currentTrackIndex - 1;
+            if (newIndex < 0) {
+                newIndex = songQueue.length - 1; // Loop to end of queue
+            }
+            playSong(newIndex);
+        }
+
+        function playNext() {
+            if (songQueue.length === 0) return;
+            let newIndex = currentTrackIndex + 1;
+            if (newIndex >= songQueue.length) {
+                newIndex = 0; // Loop to beginning of queue
+            }
+            playSong(newIndex);
+        }
+
+        function shuffleQueue() {
+            if (songQueue.length <= 1) return;
+
+            const currentTrack = songQueue[currentTrackIndex];
+            let currentIndex = songQueue.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex !== 0) {
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [songQueue[currentIndex], songQueue[randomIndex]] = [
+                    songQueue[randomIndex], songQueue[currentIndex]];
+            }
+
+            // Find the new index of the current playing track after shuffle
+            if (currentTrack) {
+                currentTrackIndex = songQueue.indexOf(currentTrack);
+            } else {
+                currentTrackIndex = -1; // No track was playing or queue was empty
+            }
+            renderQueue();
+            // If a song was playing, restart it from its current position in the new order
+            if (isPlaying && currentTrackIndex !== -1) {
+                // No need to call playSong, just update the queue and visualizer will continue
+                // from current position if audioPlayer.src is still valid.
+                // If the track was paused, it remains paused.
+            }
+        }
+
+        mixQueueBtn.addEventListener('click', shuffleQueue);
+        prevTrackBtn.addEventListener('click', playPrevious);
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        nextTrackBtn.addEventListener('click', playNext);
+
+        audioPlayer.onplay = () => {
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+            isPlaying = true;
+            trackStatusEl.textContent = 'Playing...';
+            updatePlayPauseButton();
+            drawVisualizer();
+            updateTrackInfoDisplay(); // Update track info when playback starts
+        };
+
+        audioPlayer.onpause = () => {
+            isPlaying = false;
+            trackStatusEl.textContent = 'Paused';
+            updatePlayPauseButton();
+            updateTrackInfoDisplay(); // Update track info when playback pauses
+        };
+
+        audioPlayer.onended = () => {
+            if (visualizerSettings.repeatMode === 'song') {
+                audioPlayer.currentTime = 0; // Reset to beginning
+                audioPlayer.play();
+            } else if (visualizerSettings.repeatMode === 'queue') {
+                const nextTrackIndex = (currentTrackIndex + 1) % songQueue.length;
+                playSong(nextTrackIndex);
+            } else { // 'off' mode
+                const nextTrackIndex = currentTrackIndex + 1;
+                if (nextTrackIndex < songQueue.length) {
+                    playSong(nextTrackIndex);
+                } else {
+                    isPlaying = false;
+                    currentTrackIndex = -1;
+                    trackNameEl.textContent = 'Queue finished';
+                    trackStatusEl.textContent = 'Add more songs to play';
+                    renderQueue();
+                    updatePlayPauseButton(); // Ensure play icon is shown
+                    updateTrackInfoDisplay(); // Update track info when queue finishes
+                }
+            }
+        };
+
+        // Update time display every second
+        audioPlayer.ontimeupdate = () => {
+            updateTimeDisplay();
+            // Only update track info panel if visible and queue panel is also visible
+            if (!queueTrackInfoSection.classList.contains('hidden') && !queuePanel.classList.contains('hidden')) {
+                updateTrackInfoDisplay();
+            }
+        };
+
+        audioPlayer.ondurationchange = () => {
+            updateTimeDisplay();
+            updateTrackInfoDisplay(); // Update track info when duration changes (e.g., new song loaded)
+        };
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        }
+
+        function updateTimeDisplay() {
+            const currentTime = audioPlayer.currentTime;
+            const duration = audioPlayer.duration;
+            const formattedCurrent = formatTime(currentTime);
+            const formattedDuration = isNaN(duration) ? '0:00' : formatTime(duration);
+            timeDisplayEl.textContent = `${formattedCurrent} / ${formattedDuration}`;
+        }
+
+        function updateTrackInfoDisplay() {
+            if (currentTrackIndex !== -1 && songQueue[currentTrackIndex]) {
+                const currentFile = songQueue[currentTrackIndex];
+                const fileName = currentFile.name;
+                
+                // Try to parse artist and title from filename
+                const parts = fileName.split('.');
+                const nameWithoutExtension = parts.slice(0, -1).join('.');
+                let artist = 'Unknown Artist';
+                let title = nameWithoutExtension;
+
+                // Simple heuristic: if filename contains " - ", assume "Artist - Title"
+                const dashIndex = nameWithoutExtension.indexOf(' - ');
+                if (dashIndex !== -1) {
+                    artist = nameWithoutExtension.substring(0, dashIndex).trim();
+                    title = nameWithoutExtension.substring(dashIndex + 3).trim();
+                }
+
+                infoTrackNameEl.textContent = title;
+                infoArtistEl.textContent = `Artist: ${artist}`;
+                infoQualityEl.textContent = `Quality: Digital Audio (Variable Bitrate)`; // Placeholder for quality
+                infoTimeEl.textContent = `Time: ${formatTime(audioPlayer.currentTime)} / ${isNaN(audioPlayer.duration) ? '0:00' : formatTime(audioPlayer.duration)}`;
+                trackCoverImageEl.src = "https://placehold.co/150x150/374151/D1D5DB?text=No+Cover"; // Placeholder image
+            } else {
+                infoTrackNameEl.textContent = 'No track loaded';
+                infoArtistEl.textContent = 'Artist: N/A';
+                infoQualityEl.textContent = 'Quality: N/A';
+                infoTimeEl.textContent = 'Time: 0:00 / 0:00';
+                trackCoverImageEl.src = "https://placehold.co/150x150/374151/D1D5DB?text=No+Cover";
+            }
+        }
+
+        function renderQueue() {
+            songQueueListEl.innerHTML = '';
+            if (songQueue.length === 0) {
+                songQueueListEl.innerHTML = `<li class="text-gray-400 italic">Queue is empty</li>`;
+                return;
+            }
+            songQueue.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.textContent = song.name;
+                li.dataset.index = index;
+                if (index === currentTrackIndex) li.classList.add('playing');
+                li.addEventListener('click', () => playSong(index));
+                songQueueListEl.appendChild(li);
+            });
+        }
+
+        // --- Visualization ---
+        function drawVisualizer() {
+            if (!isPlaying) {
+                clearCanvas();
+                return;
+            }
+            requestAnimationFrame(drawVisualizer);
+            analyser.getByteFrequencyData(dataArray);
+
+            clearCanvas(); // 1. Clear canvas with background first
+            
+            // Apply gradient or single color to canvas context properties
+            if (visualizerSettings.enableWaveGradient) {
+                const gradient = canvasCtx.createLinearGradient(0, canvas.clientHeight, 0, 0); // Vertical gradient
+                gradient.addColorStop(0, visualizerSettings.waveGradientLowColor); // Bottom (low)
+                gradient.addColorStop(1, visualizerSettings.waveGradientHighColor); // Top (high)
+                canvasCtx.fillStyle = gradient;
+                canvasCtx.strokeStyle = gradient;
+            } else {
+                canvasCtx.fillStyle = visualizerSettings.color;
+                canvasCtx.strokeStyle = visualizerSettings.color;
+            }
+
+            // 2. Draw visualizer based on mode (now drawn BEFORE center image)
+            switch(visualizerSettings.mode) {
+                case 'bars': drawBars(); break;
+                case 'circularBars': drawCircularBars(); break;
+                case 'circles': drawCircles(); break;
+                case 'waves': drawWaves(); break;
+            }
+
+            // Draw Hz Lines if enabled
+            if (visualizerSettings.showHzLines) {
+                drawHzLines();
+            }
+            
+            // 3. Draw center image if available and in circular modes (now drawn AFTER visualizer)
+            if (visualizerSettings.centerImage && (visualizerSettings.mode === 'circularBars' || visualizerSettings.mode === 'circles')) {
+                const img = visualizerSettings.centerImage;
+                const centerX = canvas.clientWidth / 2;
+                const centerY = canvas.clientHeight / 2;
+                // Make it slightly smaller to allow bars/circles around it
+                const maxDim = Math.min(canvas.clientWidth, canvas.clientHeight) * 0.3; 
+                // Use the smaller dimension of the image or maxDim for drawing size
+                let drawSize = Math.min(img.width, img.height, maxDim); 
+
+                canvasCtx.save(); // Save the current canvas state
+                canvasCtx.beginPath();
+                // Create a circular clipping path
+                canvasCtx.arc(centerX, centerY, drawSize / 2, 0, Math.PI * 2, true); 
+                canvasCtx.closePath();
+                canvasCtx.clip(); // Apply the clipping path
+
+                // Calculate source rectangle to crop the image to a square from its center
+                const sourceX = (img.width - drawSize) / 2;
+                const sourceY = (img.height - drawSize) / 2;
+                canvasCtx.drawImage(
+                    img,
+                    sourceX, sourceY, drawSize, drawSize, // Source rectangle (crop to square)
+                    centerX - drawSize / 2, centerY - drawSize / 2, drawSize, drawSize // Destination rectangle (draw as square)
+                );
+                canvasCtx.restore(); // Restore the canvas state (remove dashed line setting)
+            }
+        }
+        
+        function drawBars() {
+            // Adjusted for a VirtualDJ-like appearance
+            const barWidth = (canvas.clientWidth / bufferLength) * 2.5; // Thicker bars
+            const barSpacing = 2; // Small gap between bars
+            let x = 0;
+            // Use canvasCtx.fillStyle directly, as it's set globally now
+            for (let i = 0; i < bufferLength; i++) {
+                const barHeight = dataArray[i] * visualizerSettings.sensitivity;
+                canvasCtx.fillRect(x, canvas.clientHeight - barHeight, barWidth, barHeight);
+                x += barWidth + barSpacing;
+            }
+        }
+
+        function drawCircularBars() {
+            const centerX = canvas.clientWidth / 2;
+            const centerY = canvas.clientHeight / 2;
+            const baseRadius = 40; 
+            // Use canvasCtx.strokeStyle directly, as it's set globally now
+            canvasCtx.lineWidth = 2;
+            for (let i = 0; i < bufferLength; i++) {
+                const barLength = (dataArray[i] * 0.8) * visualizerSettings.sensitivity;
+                const angle = (i / bufferLength) * Math.PI * 2;
+                const startX = centerX + baseRadius * Math.cos(angle);
+                const startY = centerY + baseRadius * Math.sin(angle);
+                const endX = centerX + (baseRadius + barLength) * Math.cos(angle);
+                const endY = centerY + (baseRadius + barLength) * Math.sin(angle);
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(startX, startY);
+                canvasCtx.lineTo(endX, endY);
+                canvasCtx.stroke();
+            }
+        }
+
+        function drawCircles() {
+            const centerX = canvas.clientWidth / 2;
+            const centerY = canvas.clientHeight / 2;
+            // Use canvasCtx.strokeStyle directly, as it's set globally now
+            canvasCtx.lineWidth = 2;
+            for (let i = 0; i < bufferLength; i++) {
+                if (i % 4 === 0) {
+                    const radius = (dataArray[i] / 255) * (canvas.clientHeight / 2.5) * visualizerSettings.sensitivity;
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(centerX, centerY, radius > 2 ? radius : 2, 0, 2 * Math.PI);
+                    canvasCtx.stroke();
+                }
+            }
+        }
+
+        function drawWaves() {
+            canvasCtx.lineWidth = 3;
+            // Use canvasCtx.strokeStyle directly, as it's set globally now
+            canvasCtx.beginPath();
+            const sliceWidth = canvas.clientWidth * 1.0 / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const v = (dataArray[i] / 128.0) * visualizerSettings.sensitivity;
+                const y = v * canvas.clientHeight / 2;
+                if (i === 0) canvasCtx.moveTo(x, y);
+                else canvasCtx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            canvasCtx.lineTo(canvas.width, canvas.height / 2);
+            canvasCtx.stroke();
+        }
+
+        // Draw Hz Lines function with labels
+        function drawHzLines() {
+            canvasCtx.save(); // Save current state
+            canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; // Light grey, semi-transparent
+            canvasCtx.lineWidth = 1;
+            canvasCtx.setLineDash([5, 5]); // Dashed lines
+
+            const numLines = 5;
+            const lineSpacing = canvas.clientHeight / (numLines + 1);
+            const maxFreq = audioContext ? audioContext.sampleRate / 2 : 22050; // Default if context not ready
+            
+            // Approximate Hz labels for visual guidance
+            const hzLabels = ["High (10kHz+)", "Mid-High (5kHz)", "Mid (1kHz)", "Low-Mid (200Hz)", "Low (50Hz)"];
+
+            canvasCtx.font = '12px Inter';
+            canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.7)'; // Slightly more opaque for text
+            canvasCtx.textAlign = 'right';
+            canvasCtx.textBaseline = 'middle';
+
+            for (let i = 1; i <= numLines; i++) {
+                const y = i * lineSpacing;
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(0, y);
+                canvasCtx.lineTo(canvas.clientWidth, y);
+                canvasCtx.stroke();
+
+                // Draw label at the right end of the line
+                if (hzLabels[i - 1]) {
+                    canvasCtx.fillText(hzLabels[i - 1], canvas.clientWidth - 10, y);
+                }
+            }
+
+            canvasCtx.restore(); // Restore previous state (remove dashed line setting)
+        }
+
+        function clearCanvas() {
+            // Prioritize uploaded image, then URL, then background color
+            if (visualizerSettings.backgroundImage) {
+                const img = visualizerSettings.backgroundImage;
+                canvasCtx.drawImage(img, 0, 0, canvas.clientWidth, canvas.clientHeight);
+            } else if (visualizerSettings.backgroundImageUrl) {
+                const img = new Image();
+                img.onload = () => {
+                    canvasCtx.drawImage(img, 0, 0, canvas.clientWidth, canvas.clientHeight);
+                };
+                img.onerror = () => {
+                    console.error('Failed to load background image from URL:', visualizerSettings.backgroundImageUrl);
+                    // Fallback to color if image fails
+                    canvasCtx.fillStyle = visualizerSettings.backgroundColor || '#181818';
+                    canvasCtx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+                };
+                img.src = visualizerSettings.backgroundImageUrl;
+            } else {
+                // Clear with background color
+                canvasCtx.fillStyle = visualizerSettings.backgroundColor || '#181818';
+                canvasCtx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+            }
+        }
+
+        // --- Initial Render ---
+        renderQueue();
+        clearCanvas();
+        updatePlayPauseButton(); // Set initial play/pause icon
+        updateTimeDisplay(); // Set initial time display
+        updateTrackInfoDisplay(); // Set initial track info display
+    </script>
+
+</body>
+</html>
