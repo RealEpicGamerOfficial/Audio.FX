@@ -19,6 +19,7 @@ The following chart is shows any updates before the current update.
 *Sorry, We have lost data for updates 1.1.0-1.2.0
 
 ### Aditional Info (for each update)
+...work in progress, this make take a while!
 
 | Version | Aditional Info |
 | ------- | -------------- |
