@@ -3,131 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Visualizer FX - DJ Mode</title>
+    <title>Audio.FX</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Poppins & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827; /* bg-gray-900 */
+            font-family: 'Poppins', sans-serif;
+            background-color: #111111;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        #canvas-container {
+            position: relative;
+            background: linear-gradient(180deg, #181818 0%, #111111 100%);
         }
         canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background-color: #111827;
+            display: block; width: 100%; height: 100%;
+            background-color: transparent; position: relative; z-index: 10;
+        }
+        #backgroundVideo, #backgroundImage {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1; opacity: 0.8;
         }
         .control-button {
             transition: all 0.2s ease-in-out;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .control-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(0, 255, 231, 0.5);
         }
         .control-button.active {
-            background-color: #2563EB; /* bg-blue-600 */
-            color: white;
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+            background-color: #00FFE7; /* Teal accent */
+            color: #111;
+            box-shadow: 0 0 20px rgba(0, 255, 231, 0.4);
+            border-color: #00FFE7;
         }
-        .deck-button {
-            cursor: pointer;
-        }
-        .play-pause-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        /* Custom styling for range sliders */
+        .deck-button, .library-button { cursor: pointer; }
+        .play-pause-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        /* Redesigned Sliders */
         input[type=range] {
-            -webkit-appearance: none;
-            background: transparent;
-            cursor: pointer;
+            -webkit-appearance: none; background: transparent; cursor: pointer;
         }
-        input[type=range]:focus {
-            outline: none;
-        }
+        input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 8px;
-            background: #4B5563; /* bg-gray-600 */
-            border-radius: 5px;
+            width: 100%; height: 6px;
+            background: linear-gradient(90deg, #333, #555);
+            border-radius: 3px;
         }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: #9CA3AF; /* bg-gray-400 */
-            margin-top: -8px;
-            border: 2px solid #1F2937;
+            -webkit-appearance: none; height: 20px; width: 20px;
+            border-radius: 50%; background: #E5E7EB;
+            margin-top: -7px; border: 2px solid #111;
         }
         #crossfader::-webkit-slider-thumb {
-             background: #3B82F6; /* bg-blue-500 */
-             width: 16px;
+             background: #00FFE7;
         }
+        
+        /* Component Styling */
+        .component-panel {
+            background: #181818;
+            border: 1px solid #282828;
+            border-radius: 12px;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.05);
+        }
+        #library-list li:hover { background-color: #222; }
     </style>
 </head>
-<body class="text-gray-200 flex flex-col h-screen p-4">
+<body class="text-gray-200 flex flex-col h-screen p-4 gap-4">
 
-    <div id="main-container" class="w-full h-full flex flex-col gap-4">
-        
-        <!-- Visualizer and Master Controls -->
-        <div class="flex-grow flex flex-col gap-4 h-0">
-            <div id="canvas-container" class="w-full flex-grow bg-gray-900 rounded-xl shadow-2xl shadow-blue-500/10 overflow-hidden">
-                <canvas id="visualizerCanvas"></canvas>
-            </div>
-
-            <div id="master-controls" class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl shadow-lg w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-                 <div class="flex items-center gap-4 flex-wrap justify-center">
-                    <button id="fullscreen-btn" class="control-button bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">Fullscreen</button>
-                     <div class="flex items-center gap-2">
-                        <label for="speed-slider" class="text-sm">Gradient Speed</label>
-                        <input type="range" id="speed-slider" min="0" max="1" step="0.05" value="0.2" class="w-24">
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap justify-center">
-                    <button class="mode-btn control-button active bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg text-sm" data-mode="bars">Bars</button>
-                    <button class="mode-btn control-button bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg text-sm" data-mode="circleBars">Circle</button>
-                    <button class="mode-btn control-button bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg text-sm" data-mode="wave">Wave</button>
-                    <button class="mode-btn control-button bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg text-sm" data-mode="particles">Particles</button>
-                    <button class="mode-btn control-button bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded-lg text-sm" data-mode="wireframe">Wireframe</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- DJ Decks -->
-        <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-            <!-- Deck A -->
-            <div id="deck-a" class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl shadow-lg flex flex-col gap-3">
-                <h2 class="text-xl font-bold text-center text-blue-400">DECK A</h2>
-                <div id="song-info-a" class="text-center text-sm text-gray-400 truncate">No Track Loaded</div>
-                <div id="time-display-a" class="text-center font-mono text-lg">0:00 / 0:00</div>
-                <div class="flex items-center justify-center gap-2">
-                    <input type="file" id="audioFileA" accept="audio/*" class="hidden">
-                    <label for="audioFileA" class="deck-button control-button bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg w-full text-center">Load</label>
-                    <button id="play-pause-a" class="play-pause-btn control-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg" disabled>Play</button>
-                    <button id="loop-a" class="deck-button control-button bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">Loop</button>
-                </div>
-            </div>
-
-            <!-- Crossfader -->
-            <div class="flex justify-center p-4">
-                <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5" class="w-full md:w-auto md:-rotate-90">
-            </div>
-
-            <!-- Deck B -->
-            <div id="deck-b" class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl shadow-lg flex flex-col gap-3">
-                <h2 class="text-xl font-bold text-center text-blue-400">DECK B</h2>
-                <div id="song-info-b" class="text-center text-sm text-gray-400 truncate">No Track Loaded</div>
-                <div id="time-display-b" class="text-center font-mono text-lg">0:00 / 0:00</div>
-                <div class="flex items-center justify-center gap-2">
-                    <input type="file" id="audioFileB" accept="audio/*" class="hidden">
-                    <label for="audioFileB" class="deck-button control-button bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg w-full text-center">Load</label>
-                    <button id="play-pause-b" class="play-pause-btn control-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg" disabled>Play</button>
-                    <button id="loop-b" class="deck-button control-button bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">Loop</button>
-                </div>
-            </div>
-        </div>
-    
-        <footer class="text-center text-xs text-gray-500 py-2">
-            <p>Copyright (C) 2025 Real_EpicGamer (RealEpicGamerOfficial) and American Remixing | ALL RIGHTS RESERVED</p>
-        </footer>
+    <!-- Top Section: Visualizer -->
+    <div id="canvas-container" class="w-full flex-grow rounded-xl shadow-lg h-1/2">
+        <img id="backgroundImage" class="hidden rounded-xl"/>
+        <video id="backgroundVideo" muted loop playsinline class="rounded-xl"></video>
+        <canvas id="visualizerCanvas"></canvas>
     </div>
+
+    <!-- Middle Section: Decks and Controls -->
+    <div class="grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] gap-4 items-center">
+        <!-- Deck A -->
+        <div id="deck-a" class="component-panel p-4 flex flex-col gap-4">
+            <h2 class="text-xl font-bold text-center text-[#00FFE7]">DECK A</h2>
+            <div id="song-info-a" class="text-center text-sm text-gray-400 truncate h-5">No Track Loaded</div>
+            <div id="time-display-a" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            <input type="range" id="volume-a" class="w-full" min="0" max="1" step="0.01" value="1">
+            <div class="flex items-center justify-center gap-3">
+                <button id="play-pause-a" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center"><span class="material-symbols-outlined">play_arrow</span></button>
+                <button id="loop-a" class="deck-button control-button text-white p-3 rounded-full flex justify-center items-center"><span class="material-symbols-outlined">repeat</span></button>
+            </div>
+        </div>
+
+        <!-- Master Controls -->
+        <div id="master-controls" class="component-panel p-4 w-full flex flex-col items-center justify-between gap-4">
+            <div class="flex flex-col items-center justify-center w-full gap-2">
+                <label class="text-xs font-semibold tracking-wider uppercase">Master Vol</label>
+                <input type="range" id="master-volume" class="w-full" min="0" max="1" step="0.01" value="1">
+                <label class="text-xs font-semibold tracking-wider uppercase mt-2">Balance</label>
+                <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5" class="w-full">
+            </div>
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                <button class="mode-btn control-button active p-2 rounded-lg" data-mode="bars" title="Bars"><span class="material-symbols-outlined">bar_chart</span></button>
+                <button class="mode-btn control-button p-2 rounded-lg" data-mode="circleBars" title="Circle"><span class="material-symbols-outlined">track_changes</span></button>
+                <button class="mode-btn control-button p-2 rounded-lg" data-mode="wave" title="Wave"><span class="material-symbols-outlined">show_chart</span></button>
+                <button class="mode-btn control-button p-2 rounded-lg" data-mode="wireframe" title="Wireframe"><span class="material-symbols-outlined">space_dashboard</span></button>
+                <button class="mode-btn control-button p-2 rounded-lg" data-mode="cubes" title="Cubes"><span class="material-symbols-outlined">view_cozy</span></button>
+                <button class="mode-btn control-button p-2 rounded-lg" data-mode="spine" title="Spine"><span class="material-symbols-outlined">linear_scale</span></button>
+            </div>
+             <div class="flex items-center gap-3 flex-wrap justify-center">
+                <button id="fullscreen-btn" class="control-button p-2 rounded-lg" title="Fullscreen"><span class="material-symbols-outlined">fullscreen</span></button>
+                <button id="settings-btn" class="control-button p-2 rounded-lg" title="Settings"><span class="material-symbols-outlined">settings</span></button>
+                 <div class="flex items-center gap-2">
+                    <label for="speed-slider" class="text-xs">Speed</label>
+                    <input type="range" id="speed-slider" min="0" max="1" step="0.05" value="0.2" class="w-24">
+                </div>
+            </div>
+        </div>
+
+        <!-- Deck B -->
+        <div id="deck-b" class="component-panel p-4 flex flex-col gap-4">
+            <h2 class="text-xl font-bold text-center text-[#00FFE7]">DECK B</h2>
+            <div id="song-info-b" class="text-center text-sm text-gray-400 truncate h-5">No Track Loaded</div>
+            <div id="time-display-b" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            <input type="range" id="volume-b" class="w-full" min="0" max="1" step="0.01" value="1">
+            <div class="flex items-center justify-center gap-3">
+                <button id="play-pause-b" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center" disabled><span class="material-symbols-outlined">play_arrow</span></button>
+                <button id="loop-b" class="deck-button control-button text-white p-3 rounded-full flex justify-center items-center"><span class="material-symbols-outlined">repeat</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section: Library -->
+    <div id="library-container" class="component-panel p-4 flex flex-col h-1/3">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xl font-bold">Library</h2>
+            <input type="file" id="library-file-input" accept="audio/*,video/mp4" class="hidden" multiple>
+            <label for="library-file-input" class="control-button flex items-center gap-2 font-semibold py-2 px-4 rounded-lg"><span class="material-symbols-outlined text-base">add</span> Add to Library</label>
+        </div>
+        <div class="flex-grow overflow-y-auto">
+            <ul id="library-list">
+                <li class="text-gray-500 justify-center flex items-center h-full">Your library is empty.</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div class="component-panel p-6 w-full max-w-md flex flex-col gap-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Settings</h2>
+                <button id="close-settings-btn" class="text-gray-400 hover:text-white"><span class="material-symbols-outlined text-3xl">close</span></button>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Animation Background</h3>
+                <div class="flex gap-3">
+                    <input type="file" id="background-image-input" accept="image/*" class="hidden">
+                    <label for="background-image-input" class="control-button w-full text-center block py-2 px-4 rounded-lg cursor-pointer">Choose Image</label>
+                    <input type="file" id="background-video-input" accept="video/mp4" class="hidden">
+                    <label for="background-video-input" class="control-button w-full text-center block py-2 px-4 rounded-lg cursor-pointer">Choose Video</label>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Quality</h3>
+                <div class="flex items-center gap-3">
+                    <input type="range" id="quality-slider" min="1" max="100" value="50" class="w-full">
+                    <span id="quality-label" class="font-mono text-sm w-20 text-center bg-gray-900/50 py-1 rounded">HD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center text-xs text-gray-600 py-2">
+        <p>Copyright (C) 2025 Real_EpicGamer (RealEpicGamerOfficial) and American Remixing | ALL RIGHTS RESERVED</p>
+    </footer>
 
     <audio id="audioPlayerA"></audio>
     <audio id="audioPlayerB"></audio>
@@ -137,34 +193,46 @@
         const canvasContainer = document.getElementById('canvas-container');
         const canvas = document.getElementById('visualizerCanvas');
         const ctx = canvas.getContext('2d');
+        const backgroundImage = document.getElementById('backgroundImage');
+        const backgroundVideo = document.getElementById('backgroundVideo');
+        const backgroundImageInput = document.getElementById('background-image-input');
+        const backgroundVideoInput = document.getElementById('background-video-input');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const speedSlider = document.getElementById('speed-slider');
         const modeButtons = document.querySelectorAll('.mode-btn');
         const crossfader = document.getElementById('crossfader');
+        const masterVolumeSlider = document.getElementById('master-volume');
+        const libraryFileInput = document.getElementById('library-file-input');
+        const libraryList = document.getElementById('library-list');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const qualitySlider = document.getElementById('quality-slider');
+        const qualityLabel = document.getElementById('quality-label');
 
         // Deck A Elements
         const audioPlayerA = document.getElementById('audioPlayerA');
-        const fileInputA = document.getElementById('audioFileA');
         const playPauseBtnA = document.getElementById('play-pause-a');
         const loopBtnA = document.getElementById('loop-a');
         const songInfoA = document.getElementById('song-info-a');
         const timeDisplayA = document.getElementById('time-display-a');
+        const volumeSliderA = document.getElementById('volume-a');
 
         // Deck B Elements
         const audioPlayerB = document.getElementById('audioPlayerB');
-        const fileInputB = document.getElementById('audioFileB');
         const playPauseBtnB = document.getElementById('play-pause-b');
         const loopBtnB = document.getElementById('loop-b');
         const songInfoB = document.getElementById('song-info-b');
         const timeDisplayB = document.getElementById('time-display-b');
+        const volumeSliderB = document.getElementById('volume-b');
 
         // --- State Management ---
-        let audioContext, analyser, sourceA, sourceB, gainA, gainB, dataArray, bufferLength;
+        let audioContext, analyser, sourceA, sourceB, gainA, gainB, masterGain, dataArray, bufferLength;
         let currentMode = 'bars';
         let hue = 0;
         let gradientSpeed = 0.2;
         let animationFrameId;
-        let particlesArray = [];
+        let musicLibrary = [];
 
         // --- Helper Functions ---
         const formatTime = (seconds) => {
@@ -180,18 +248,17 @@
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 2048;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
+                updateAnalyserSettings();
 
                 sourceA = audioContext.createMediaElementSource(audioPlayerA);
                 gainA = audioContext.createGain();
                 sourceB = audioContext.createMediaElementSource(audioPlayerB);
                 gainB = audioContext.createGain();
+                masterGain = audioContext.createGain();
 
                 sourceA.connect(gainA).connect(analyser);
                 sourceB.connect(gainB).connect(analyser);
-                analyser.connect(audioContext.destination);
+                analyser.connect(masterGain).connect(audioContext.destination);
                 
                 updateCrossfader();
 
@@ -201,50 +268,112 @@
             }
         }
 
+        function updateAnalyserSettings() {
+            if (!analyser) return;
+            const qualityValue = parseInt(qualitySlider.value);
+            let newFftSize = 2048;
+            if (qualityValue <= 25) { newFftSize = 1024; qualityLabel.textContent = 'Low'; }
+            else if (qualityValue <= 50) { newFftSize = 2048; qualityLabel.textContent = 'HD'; }
+            else if (qualityValue <= 75) { newFftSize = 4096; qualityLabel.textContent = 'QHD'; }
+            else { newFftSize = 8192; qualityLabel.textContent = '4K'; }
+
+            analyser.fftSize = newFftSize;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+        }
+
         function updateCrossfader() {
             if(!gainA || !gainB) return;
             const value = parseFloat(crossfader.value);
             gainA.gain.value = Math.cos(value * 0.5 * Math.PI);
             gainB.gain.value = Math.cos((1.0 - value) * 0.5 * Math.PI);
         }
+        
+        function checkPlaybackState() {
+            if (!backgroundVideo.src) return;
+            if (!audioPlayerA.paused || !audioPlayerB.paused) {
+                backgroundVideo.play();
+            } else {
+                backgroundVideo.pause();
+            }
+        }
+
+        // --- Library Management ---
+        function renderLibrary() {
+            libraryList.innerHTML = '';
+            if (musicLibrary.length === 0) {
+                libraryList.innerHTML = '<li class="text-gray-500 justify-center flex items-center h-full">Your library is empty.</li>';
+                return;
+            }
+            musicLibrary.forEach((track, index) => {
+                const li = document.createElement('li');
+                li.className = 'p-2 flex justify-between items-center rounded-md transition-colors';
+                li.innerHTML = `
+                    <span class="truncate pr-4">${track.name}</span>
+                    <div class="flex-shrink-0 flex gap-2">
+                        <button class="library-button control-button p-2 rounded-lg" data-action="load" data-deck="A" data-index="${index}" title="Load to Deck A"><span class="material-symbols-outlined">north_west</span></button>
+                        <button class="library-button control-button p-2 rounded-lg" data-action="load" data-deck="B" data-index="${index}" title="Load to Deck B"><span class="material-symbols-outlined">north_east</span></button>
+                    </div>
+                `;
+                libraryList.appendChild(li);
+            });
+        }
+
+        libraryFileInput.addEventListener('change', (e) => {
+            if (!audioContext) initializeAudio();
+            for (const file of e.target.files) {
+                musicLibrary.push({ name: file.name, url: URL.createObjectURL(file) });
+            }
+            renderLibrary();
+            e.target.value = null;
+        });
+
+        libraryList.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (button && button.dataset.action === 'load') {
+                const deck = button.dataset.deck;
+                const index = parseInt(button.dataset.index);
+                const track = musicLibrary[index];
+                
+                if (deck === 'A') loadTrackToDeck(audioPlayerA, songInfoA, playPauseBtnA, track);
+                else loadTrackToDeck(audioPlayerB, songInfoB, playPauseBtnB, track);
+            }
+        });
+        
+        function loadTrackToDeck(player, infoEl, playBtn, track) {
+            player.src = track.url;
+            player.load();
+            infoEl.textContent = track.name;
+            playBtn.disabled = false;
+        }
 
         // --- Deck Setup Function ---
-        function setupDeck(deckId, audioPlayer, fileInput, playPauseBtn, loopBtn, songInfo, timeDisplay) {
-            let isLooping = false;
-
-            fileInput.addEventListener('change', (e) => {
-                if (!audioContext) initializeAudio();
-                const file = e.target.files[0];
-                if (!file) return;
-
-                audioPlayer.src = URL.createObjectURL(file);
-                audioPlayer.load();
-                songInfo.textContent = file.name;
-                playPauseBtn.disabled = false;
-                e.target.value = null;
-            });
-
+        function setupDeck(audioPlayer, playPauseBtn, loopBtn, timeDisplay, volumeSlider) {
             playPauseBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
-                if (audioPlayer.paused) {
-                    audioPlayer.play();
-                } else {
-                    audioPlayer.pause();
-                }
+                audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
             });
 
             loopBtn.addEventListener('click', () => {
-                isLooping = !isLooping;
-                audioPlayer.loop = isLooping;
-                loopBtn.classList.toggle('active', isLooping);
+                audioPlayer.loop = !audioPlayer.loop;
+                loopBtn.classList.toggle('active', audioPlayer.loop);
             });
 
+            volumeSlider.addEventListener('input', (e) => audioPlayer.volume = parseFloat(e.target.value));
+
             audioPlayer.addEventListener('play', () => {
-                playPauseBtn.textContent = 'Pause';
+                playPauseBtn.innerHTML = `<span class="material-symbols-outlined">pause</span>`;
+                checkPlaybackState();
                 if (!animationFrameId) animate();
             });
-            audioPlayer.addEventListener('pause', () => playPauseBtn.textContent = 'Play');
-            audioPlayer.addEventListener('ended', () => playPauseBtn.textContent = 'Play');
+            audioPlayer.addEventListener('pause', () => {
+                playPauseBtn.innerHTML = `<span class="material-symbols-outlined">play_arrow</span>`;
+                checkPlaybackState();
+            });
+             audioPlayer.addEventListener('ended', () => {
+                playPauseBtn.innerHTML = `<span class="material-symbols-outlined">play_arrow</span>`;
+                checkPlaybackState();
+            });
             
             audioPlayer.addEventListener('loadedmetadata', () => {
                 timeDisplay.textContent = `0:00 / ${formatTime(audioPlayer.duration)}`;
@@ -254,19 +383,42 @@
             });
         }
         
-        setupDeck('A', audioPlayerA, fileInputA, playPauseBtnA, loopBtnA, songInfoA, timeDisplayA);
-        setupDeck('B', audioPlayerB, fileInputB, playPauseBtnB, loopBtnB, songInfoB, timeDisplayB);
+        setupDeck(audioPlayerA, playPauseBtnA, loopBtnA, timeDisplayA, volumeSliderA);
+        setupDeck(audioPlayerB, playPauseBtnB, loopBtnB, timeDisplayB, volumeSliderB);
 
         // --- Master Control Listeners ---
         crossfader.addEventListener('input', updateCrossfader);
         speedSlider.addEventListener('input', (e) => gradientSpeed = parseFloat(e.target.value));
-        fullscreenBtn.addEventListener('click', () => {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                canvasContainer.requestFullscreen().catch(err => alert(`Fullscreen error: ${err.message}`));
+        masterVolumeSlider.addEventListener('input', (e) => { if(masterGain) masterGain.gain.value = parseFloat(e.target.value); });
+        
+        backgroundImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                backgroundImage.src = URL.createObjectURL(file);
+                backgroundImage.classList.remove('hidden');
+                backgroundVideo.classList.add('hidden');
+                backgroundVideo.src = '';
+                settingsModal.classList.add('hidden');
             }
         });
+
+        backgroundVideoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                backgroundVideo.src = URL.createObjectURL(file);
+                backgroundVideo.classList.remove('hidden');
+                backgroundImage.classList.add('hidden');
+                backgroundImage.src = '';
+                checkPlaybackState();
+                settingsModal.classList.add('hidden');
+            }
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else canvasContainer.requestFullscreen().catch(err => alert(`Fullscreen error: ${err.message}`));
+        });
+
         modeButtons.forEach(button => {
             button.addEventListener('click', function() {
                 currentMode = this.dataset.mode;
@@ -274,169 +426,157 @@
                 this.classList.add('active');
             });
         });
+        
+        settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.add('hidden'); });
+        qualitySlider.addEventListener('input', updateAnalyserSettings);
 
-        // --- Canvas Sizing ---
+        // --- Canvas Sizing & Animation ---
         function resizeCanvas() {
             canvas.width = canvasContainer.clientWidth;
             canvas.height = canvasContainer.clientHeight;
         }
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // --- Particle Class ---
-        class Particle {
-            constructor(x, y, size, color, speedX, speedY) {
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.color = color;
-                this.speedX = speedX;
-                this.speedY = speedY;
-                this.life = 1; // 1 to 0
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.size > 0.2) this.size -= 0.1;
-                this.life -= 0.02;
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.globalAlpha = this.life;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // --- Animation Loop ---
+        
         function animate() {
             if (audioPlayerA.paused && audioPlayerB.paused) {
                 animationFrameId = null;
                 return;
             }
-
+            animationFrameId = requestAnimationFrame(animate);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (currentMode === 'wave') {
-                analyser.getByteTimeDomainData(dataArray);
-            } else {
-                analyser.getByteFrequencyData(dataArray);
-            }
+            if (currentMode === 'wave') analyser.getByteTimeDomainData(dataArray);
+            else analyser.getByteFrequencyData(dataArray);
 
             switch (currentMode) {
                 case 'bars': drawBars(); break;
                 case 'circleBars': drawCircleBars(); break;
                 case 'wave': drawWave(); break;
-                case 'particles': drawParticles(); break;
                 case 'wireframe': drawWireframe(); break;
+                case 'cubes': drawCubes(); break;
+                case 'spine': drawSpine(); break;
             }
-
             hue = (hue + gradientSpeed) % 360; 
-            animationFrameId = requestAnimationFrame(animate);
         }
 
         // --- Drawing Functions ---
+        const ACCENT_HUE = 175; // Teal
+        
         function drawBars() {
-            const barWidth = (canvas.width / bufferLength) * 2.5;
-            let x = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                const barHeight = dataArray[i] * (canvas.height / 255);
-                ctx.fillStyle = `hsl(${200 + hue + (i/bufferLength * 50)}, 80%, 50%)`;
+            ctx.shadowColor = `hsla(${ACCENT_HUE}, 80%, 60%, 0.5)`;
+            ctx.shadowBlur = 8;
+            const barWidth = (canvas.width / (bufferLength * 0.8));
+            for (let i = 0, x = 0; i < bufferLength; i++) {
+                const barHeight = dataArray[i] * (canvas.height / 255) * 1.1;
+                const gradient = ctx.createLinearGradient(x, canvas.height, x, canvas.height - barHeight);
+                gradient.addColorStop(0, `hsl(${ACCENT_HUE + (i/bufferLength * 50)}, 80%, 40%)`);
+                gradient.addColorStop(1, `hsl(${ACCENT_HUE + (i/bufferLength * 50) + 20}, 90%, 70%)`);
+                ctx.fillStyle = gradient;
                 ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                x += barWidth + 1;
+                x += barWidth;
             }
+            ctx.shadowBlur = 0;
         }
 
         function drawCircleBars() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(canvas.width, canvas.height) / 4;
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            for (let i = 0; i < bufferLength; i += 2) { 
-                const barHeight = dataArray[i] * 0.8;
-                const angle = (i / bufferLength) * 2 * Math.PI;
-                ctx.rotate(angle);
+            const centerX = canvas.width / 2; const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) / 6;
+            ctx.save(); ctx.translate(centerX, centerY);
+            ctx.rotate(hue * 0.001 * Math.PI);
+            const barCount = bufferLength * 0.5;
+            for (let i = 0; i < barCount; i++) { 
+                const barHeight = dataArray[i] * 1.0;
+                const angle = (i / barCount) * 2 * Math.PI;
+                ctx.save(); ctx.rotate(angle);
+                ctx.shadowColor = `hsl(${ACCENT_HUE + (i/barCount * 100)}, 90%, 60%)`;
+                ctx.shadowBlur = 10;
                 const gradient = ctx.createLinearGradient(0, 0, 0, -barHeight);
-                gradient.addColorStop(0, `hsl(${200 + hue + (i/bufferLength * 100)}, 90%, 60%)`);
-                gradient.addColorStop(1, `hsl(${200 + hue + (i/bufferLength * 100) + 20}, 70%, 50%)`);
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, radius, 2, barHeight);
-                ctx.rotate(-angle);
+                gradient.addColorStop(0, `hsl(${ACCENT_HUE + (i/barCount * 100)}, 90%, 60%)`);
+                gradient.addColorStop(1, `hsl(${ACCENT_HUE + (i/barCount * 100) + 40}, 70%, 50%)`);
+                ctx.fillStyle = gradient; ctx.fillRect(0, radius, 2, barHeight);
+                ctx.restore();
             }
             ctx.restore();
         }
 
         function drawWave() {
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = `hsl(${200 + hue}, 90%, 65%)`;
+            ctx.lineWidth = 3; 
+            ctx.strokeStyle = `hsl(${ACCENT_HUE + hue / 10}, 90%, 65%)`;
+            ctx.shadowColor = `hsl(${ACCENT_HUE + hue / 10}, 90%, 65%)`;
+            ctx.shadowBlur = 15;
             ctx.beginPath();
             const sliceWidth = canvas.width / bufferLength;
-            let x = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                const v = dataArray[i] / 128.0; 
-                const y = v * (canvas.height / 2);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+            for (let i = 0, x = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0; const y = v * (canvas.height / 2);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 x += sliceWidth;
             }
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
-        }
-
-        function drawParticles() {
-            // Create new particles on bass hits
-            const bass = dataArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
-            if (bass > 150) {
-                for (let i = 0; i < 3; i++) {
-                    const size = Math.random() * (bass / 20) + 2;
-                    const color = `hsl(${200 + hue + Math.random() * 50}, 80%, 50%)`;
-                    const speedX = (Math.random() - 0.5) * 5;
-                    const speedY = (Math.random() - 0.5) * 5;
-                    particlesArray.push(new Particle(canvas.width / 2, canvas.height / 2, size, color, speedX, speedY));
-                }
-            }
-
-            // Update and draw particles
-            for (let i = particlesArray.length - 1; i >= 0; i--) {
-                particlesArray[i].update();
-                particlesArray[i].draw();
-                if (particlesArray[i].life <= 0) {
-                    particlesArray.splice(i, 1);
-                }
-            }
-            ctx.globalAlpha = 1; // Reset global alpha
+            ctx.lineTo(canvas.width, canvas.height / 2); ctx.stroke();
+            ctx.shadowBlur = 0;
         }
 
         function drawWireframe() {
-            const lines = 15;
-            const step = bufferLength / 64; // Use a portion of the data
-            
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            
+            const lines = 12; const step = bufferLength / 80;
+            ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(Math.sin(hue * 0.01) * 0.03);
             for (let z = 1; z < lines; z++) {
                 ctx.beginPath();
-                const perspective = z / lines;
-                const alpha = (1 - perspective);
-                ctx.strokeStyle = `hsla(${200 + hue + z * 5}, 80%, 50%, ${alpha})`;
-                ctx.lineWidth = 1;
-
+                const p = z / lines; const a = (1 - p);
+                ctx.strokeStyle = `hsla(${ACCENT_HUE + hue/5 + z * 8}, 80%, 60%, ${a})`;
+                ctx.lineWidth = 1.5;
                 for (let i = 0; i < bufferLength; i += step) {
-                    const x = (i - bufferLength / 2) * perspective * 1.5;
-                    const y = (dataArray[i] / 2) * perspective + (z * z * 0.5);
-
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
+                    const x = (i - bufferLength / 2) * p * 1.8;
+                    const y = (dataArray[i] / 2.0) * p * (1.2 - p) + (z * z);
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             }
             ctx.restore();
         }
+
+        function drawCubes() {
+            const gridSize = 24; const cubeSize = canvas.width / gridSize;
+            const step = Math.floor(bufferLength / (gridSize * gridSize));
+            ctx.save(); ctx.translate(0, canvas.height / 2);
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const i = (y * gridSize + x) * step; const val = dataArray[i] || 0;
+                    const h = val * 1.8; const hsv = ACCENT_HUE + hue + (x - y) * 4;
+                    const grad = ctx.createLinearGradient(x*cubeSize, -h/2, x*cubeSize, h/2);
+                    grad.addColorStop(0, `hsl(${hsv}, 80%, 60%)`);
+                    grad.addColorStop(1, `hsl(${hsv}, 80%, 40%)`);
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(x*cubeSize, -h/2, cubeSize - 1, h);
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawSpine() {
+            const centerX = canvas.width / 2;
+            const numBars = bufferLength * 0.6;
+            const barHeight = canvas.height / numBars;
+            for (let i = 0; i < numBars; i++) {
+                const barWidth = dataArray[i] * 2.5;
+                const y = canvas.height - (i * barHeight);
+                const hsv = ACCENT_HUE + hue + (i / numBars * 60);
+                const grad = ctx.createLinearGradient(centerX-barWidth/2,0,centerX+barWidth/2,0);
+                grad.addColorStop(0, `hsl(${hsv - 20}, 85%, 55%)`);
+                grad.addColorStop(0.5, `hsl(${hsv}, 95%, 75%)`);
+                grad.addColorStop(1, `hsl(${hsv - 20}, 85%, 55%)`);
+                ctx.fillStyle = grad;
+                ctx.shadowColor = `hsl(${hsv}, 80%, 60%)`;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(centerX - barWidth / 2, y, barWidth, barHeight - 1);
+            }
+            ctx.shadowBlur = 0;
+        }
+        
+        // Initial setup
+        resizeCanvas();
+        renderLibrary();
     </script>
 </body>
 </html>
+
