@@ -11,18 +11,86 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
+        /* --- Theme Color Definitions --- */
+        :root, [data-theme="classic"] {
+            --color-bg: #111111;
+            --color-bg-panel: #181818;
+            --color-border: #282828;
+            --color-text: #e0e0e0;
+            --color-text-muted: #a0a0a0;
+            --color-accent: #00FFE7;
+            --color-accent-dark: #00b3a4;
+            --color-accent-text: #111111;
+            --color-accent-shadow: rgba(0, 255, 231, 0.4);
+            --color-danger: #ef4444;
+            --color-danger-hover: #f87171;
+        }
+        
+        [data-theme="american"] {
+            --color-bg: #0a0c21; /* Deep Navy */
+            --color-bg-panel: #1b1e33; /* Lighter Navy Panel */
+            --color-border: #2c3047;
+            --color-text: #ffffff;
+            --color-text-muted: #c0c5e0;
+            --color-accent: #e63946; /* Red */
+            --color-accent-dark: #b82c37;
+            --color-accent-text: #ffffff;
+            --color-accent-shadow: rgba(230, 57, 70, 0.5);
+            --color-danger: #e63946;
+            --color-danger-hover: #f15a65;
+        }
+
+        [data-theme="pro"] {
+            --color-bg: #000000;
+            --color-bg-panel: #1a1a1a;
+            --color-border: #333333;
+            --color-text: #f5f5f5;
+            --color-text-muted: #888888;
+            --color-accent: #D4AF37; /* Gold */
+            --color-accent-dark: #b89b30;
+            --color-accent-text: #000000;
+            --color-accent-shadow: rgba(212, 175, 55, 0.4);
+            --color-danger: #ef4444;
+            --color-danger-hover: #f87171;
+        }
+        /* --- End Theme Definitions --- */
+
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #111111;
-            color: #e0e0e0;
-            overflow: hidden;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            overflow-y: auto; /* Was overflow: hidden */
+            min-height: 100vh; /* Ensure it covers at least the full screen */
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+
+        /* --- Custom Scrollbar Styling --- */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-panel);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--color-accent);
+            border-radius: 10px;
+            border: 2px solid var(--color-bg-panel);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--color-accent-dark);
+        }
+        /* --- End Custom Scrollbar --- */
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            pointer-events: none;
         }
         #canvas-container {
             position: relative;
-            background: linear-gradient(180deg, #181818 0%, #111111 100%);
+            background: linear-gradient(180deg, var(--color-bg-panel), var(--color-bg));
+            transition: background 0.3s ease;
         }
         canvas {
             display: block; width: 100%; height: 100%;
@@ -34,23 +102,22 @@
         }
         .control-button {
             transition: all 0.2s ease-in-out;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--color-border);
             background-color: rgba(255, 255, 255, 0.05);
         }
         .control-button:hover {
             background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(0, 255, 231, 0.5);
+            border-color: var(--color-accent);
         }
         .control-button.active {
-            background-color: #00FFE7; /* Teal accent */
-            color: #111;
-            box-shadow: 0 0 20px rgba(0, 255, 231, 0.4);
-            border-color: #00FFE7;
+            background-color: var(--color-accent);
+            color: var(--color-accent-text);
+            box-shadow: 0 0 20px var(--color-accent-shadow);
+            border-color: var(--color-accent);
         }
         .deck-button, .library-button { cursor: pointer; }
         .play-pause-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         
-        /* Redesigned Sliders */
         input[type=range] {
             -webkit-appearance: none; background: transparent; cursor: pointer;
         }
@@ -63,23 +130,104 @@
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 20px; width: 20px;
             border-radius: 50%; background: #E5E7EB;
-            margin-top: -7px; border: 2px solid #111;
+            margin-top: -7px; border: 2px solid var(--color-bg);
         }
         #crossfader::-webkit-slider-thumb {
-             background: #00FFE7;
+             background: var(--color-accent);
         }
         
-        /* Component Styling */
         .component-panel {
-            background: #181818;
-            border: 1px solid #282828;
+            background: var(--color-bg-panel);
+            border: 1px solid var(--color-border);
             border-radius: 12px;
             box-shadow: inset 0 1px 2px rgba(255,255,255,0.05);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-        #library-list li:hover { background-color: #222; }
+        #library-list li:hover { background-color: var(--color-bg); }
+
+        /* Theme-aware utility classes */
+        .deck-header {
+            color: var(--color-accent);
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+        .song-info {
+            color: var(--color-text-muted);
+            text-align: center;
+            font-size: 0.875rem;
+            truncate: true;
+            height: 1.25rem; /* h-5 */
+            transition: color 0.3s ease;
+        }
+        .empty-library-msg {
+            color: var(--color-text-muted);
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+        .site-footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            opacity: 0.7;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+        .btn-delete {
+            border-color: var(--color-border);
+        }
+        .btn-delete .material-symbols-outlined {
+            color: var(--color-danger);
+            opacity: 0.8;
+            transition: all 0.2s ease;
+        }
+        .btn-delete:hover {
+            border-color: var(--color-danger) !important;
+        }
+        .btn-delete:hover .material-symbols-outlined {
+            color: var(--color-danger);
+            opacity: 1;
+        }
+
+        /* --- Seek Slider Styling --- */
+        .seek-slider {
+            -webkit-appearance: none;
+            background: linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) 0%, var(--color-border) 0%, var(--color-border) 100%);
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            height: 8px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .seek-slider::-webkit-slider-runnable-track {
+            -webkit-appearance: none;
+            background: transparent;
+            width: 100%;
+            height: 8px;
+        }
+        .seek-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            border: 4px solid var(--color-bg-panel);
+            margin-top: -6px; /* (8px - 20px) / 2 */
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transition: background 0.2s ease;
+        }
+        .seek-slider:hover::-webkit-slider-thumb {
+            background: var(--color-accent-dark);
+        }
+
     </style>
 </head>
-<body class="text-gray-200 flex flex-col h-screen p-4 gap-4">
+<body class="flex flex-col p-4 gap-4" data-theme="classic"> <!-- Removed h-screen -->
 
     <!-- Top Section: Visualizer -->
     <div id="canvas-container" class="w-full flex-grow rounded-xl shadow-lg h-1/2">
@@ -92,9 +240,10 @@
     <div class="grid grid-cols-1 xl:grid-cols-[1fr_auto_1fr] gap-4 items-center">
         <!-- Deck A -->
         <div id="deck-a" class="component-panel p-4 flex flex-col gap-4">
-            <h2 class="text-xl font-bold text-center text-[#00FFE7]">DECK A</h2>
-            <div id="song-info-a" class="text-center text-sm text-gray-400 truncate h-5">No Track Loaded</div>
+            <h2 class="deck-header">DECK A</h2>
+            <div id="song-info-a" class="song-info">No Track Loaded</div>
             <div id="time-display-a" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            <input type="range" id="seek-slider-a" class="w-full seek-slider" min="0" max="100" step="0.1" value="0">
             <input type="range" id="volume-a" class="w-full" min="0" max="1" step="0.01" value="1">
             <div class="flex items-center justify-center gap-3">
                 <button id="play-pause-a" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center"><span class="material-symbols-outlined">play_arrow</span></button>
@@ -130,9 +279,10 @@
 
         <!-- Deck B -->
         <div id="deck-b" class="component-panel p-4 flex flex-col gap-4">
-            <h2 class="text-xl font-bold text-center text-[#00FFE7]">DECK B</h2>
-            <div id="song-info-b" class="text-center text-sm text-gray-400 truncate h-5">No Track Loaded</div>
+            <h2 class="deck-header">DECK B</h2>
+            <div id="song-info-b" class="song-info">No Track Loaded</div>
             <div id="time-display-b" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            <input type="range" id="seek-slider-b" class="w-full seek-slider" min="0" max="100" step="0.1" value="0">
             <input type="range" id="volume-b" class="w-full" min="0" max="1" step="0.01" value="1">
             <div class="flex items-center justify-center gap-3">
                 <button id="play-pause-b" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center" disabled><span class="material-symbols-outlined">play_arrow</span></button>
@@ -148,9 +298,9 @@
             <input type="file" id="library-file-input" accept="audio/*,video/mp4" class="hidden" multiple>
             <label for="library-file-input" class="control-button flex items-center gap-2 font-semibold py-2 px-4 rounded-lg"><span class="material-symbols-outlined text-base">add</span> Add to Library</label>
         </div>
-        <div class="flex-grow overflow-y-auto">
+        <div class="flex-grow overflow-y-auto min-h-0">
             <ul id="library-list">
-                <li class="text-gray-500 justify-center flex items-center h-full">Your library is empty.</li>
+                <li class="empty-library-msg">Your library is empty.</li>
             </ul>
         </div>
     </div>
@@ -162,6 +312,16 @@
                 <h2 class="text-2xl font-bold">Settings</h2>
                 <button id="close-settings-btn" class="text-gray-400 hover:text-white"><span class="material-symbols-outlined text-3xl">close</span></button>
             </div>
+            
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Theme</h3>
+                <div id="theme-selector" class="flex gap-3">
+                    <button class="theme-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-theme="classic" data-hue="175">Classic</button>
+                    <button class="theme-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-theme="american" data-hue="356">American</button>
+                    <button class="theme-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-theme="pro" data-hue="46">Pro</button>
+                </div>
+            </div>
+
             <div>
                 <h3 class="text-lg font-semibold mb-3">Animation Background</h3>
                 <div class="flex gap-3">
@@ -181,7 +341,7 @@
         </div>
     </div>
 
-    <footer class="text-center text-xs text-gray-600 py-2">
+    <footer class="site-footer">
         <p>Copyright (C) 2025 Real_EpicGamer (RealEpicGamerOfficial) and American Remixing | ALL RIGHTS RESERVED</p>
     </footer>
 
@@ -190,6 +350,7 @@
 
     <script>
         // --- DOM Element Selection ---
+        const body = document.body;
         const canvasContainer = document.getElementById('canvas-container');
         const canvas = document.getElementById('visualizerCanvas');
         const ctx = canvas.getContext('2d');
@@ -209,6 +370,7 @@
         const closeSettingsBtn = document.getElementById('close-settings-btn');
         const qualitySlider = document.getElementById('quality-slider');
         const qualityLabel = document.getElementById('quality-label');
+        const themeButtons = document.querySelectorAll('.theme-btn');
 
         // Deck A Elements
         const audioPlayerA = document.getElementById('audioPlayerA');
@@ -217,6 +379,7 @@
         const songInfoA = document.getElementById('song-info-a');
         const timeDisplayA = document.getElementById('time-display-a');
         const volumeSliderA = document.getElementById('volume-a');
+        const seekSliderA = document.getElementById('seek-slider-a');
 
         // Deck B Elements
         const audioPlayerB = document.getElementById('audioPlayerB');
@@ -225,6 +388,7 @@
         const songInfoB = document.getElementById('song-info-b');
         const timeDisplayB = document.getElementById('time-display-b');
         const volumeSliderB = document.getElementById('volume-b');
+        const seekSliderB = document.getElementById('seek-slider-b');
 
         // --- State Management ---
         let audioContext, analyser, sourceA, sourceB, gainA, gainB, masterGain, dataArray, bufferLength;
@@ -233,6 +397,7 @@
         let gradientSpeed = 0.2;
         let animationFrameId;
         let musicLibrary = [];
+        let currentAccentHue = 175; // Default (Classic theme hue)
 
         // --- Helper Functions ---
         const formatTime = (seconds) => {
@@ -302,7 +467,7 @@
         function renderLibrary() {
             libraryList.innerHTML = '';
             if (musicLibrary.length === 0) {
-                libraryList.innerHTML = '<li class="text-gray-500 justify-center flex items-center h-full">Your library is empty.</li>';
+                libraryList.innerHTML = '<li class="empty-library-msg">Your library is empty.</li>';
                 return;
             }
             musicLibrary.forEach((track, index) => {
@@ -313,6 +478,7 @@
                     <div class="flex-shrink-0 flex gap-2">
                         <button class="library-button control-button p-2 rounded-lg" data-action="load" data-deck="A" data-index="${index}" title="Load to Deck A"><span class="material-symbols-outlined">north_west</span></button>
                         <button class="library-button control-button p-2 rounded-lg" data-action="load" data-deck="B" data-index="${index}" title="Load to Deck B"><span class="material-symbols-outlined">north_east</span></button>
+                        <button class="library-button control-button btn-delete p-2 rounded-lg group" data-action="delete" data-index="${index}" title="Delete Track"><span class="material-symbols-outlined">delete</span></button>
                     </div>
                 `;
                 libraryList.appendChild(li);
@@ -330,13 +496,20 @@
 
         libraryList.addEventListener('click', (e) => {
             const button = e.target.closest('button');
-            if (button && button.dataset.action === 'load') {
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const index = parseInt(button.dataset.index);
+
+            if (action === 'load') {
                 const deck = button.dataset.deck;
-                const index = parseInt(button.dataset.index);
                 const track = musicLibrary[index];
                 
                 if (deck === 'A') loadTrackToDeck(audioPlayerA, songInfoA, playPauseBtnA, track);
                 else loadTrackToDeck(audioPlayerB, songInfoB, playPauseBtnB, track);
+            } else if (action === 'delete') {
+                musicLibrary.splice(index, 1);
+                renderLibrary();
             }
         });
         
@@ -348,8 +521,11 @@
         }
 
         // --- Deck Setup Function ---
-        function setupDeck(audioPlayer, playPauseBtn, loopBtn, timeDisplay, volumeSlider) {
+        function setupDeck(audioPlayer, playPauseBtn, loopBtn, timeDisplay, volumeSlider, seekSlider) {
+            let isSeeking = false;
+
             playPauseBtn.addEventListener('click', () => {
+                if (!audioContext) initializeAudio();
                 if (audioContext.state === 'suspended') audioContext.resume();
                 audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
             });
@@ -373,18 +549,41 @@
              audioPlayer.addEventListener('ended', () => {
                 playPauseBtn.innerHTML = `<span class="material-symbols-outlined">play_arrow</span>`;
                 checkPlaybackState();
+                if (!audioPlayer.loop) {
+                    seekSlider.value = 0;
+                    seekSlider.style.background = `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) 0%, var(--color-border) 0%, var(--color-border) 100%)`;
+                }
             });
             
             audioPlayer.addEventListener('loadedmetadata', () => {
                 timeDisplay.textContent = `0:00 / ${formatTime(audioPlayer.duration)}`;
+                seekSlider.value = 0;
+                seekSlider.style.background = `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) 0%, var(--color-border) 0%, var(--color-border) 100%)`;
             });
             audioPlayer.addEventListener('timeupdate', () => {
                 timeDisplay.textContent = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`;
+                if (!isSeeking && audioPlayer.duration) {
+                    const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    if (!isNaN(progress)) {
+                        seekSlider.value = progress;
+                        seekSlider.style.background = `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) ${progress}%, var(--color-border) ${progress}%, var(--color-border) 100%)`;
+                    }
+                }
+            });
+
+            // --- Seek Slider Events ---
+            seekSlider.addEventListener('mousedown', () => { isSeeking = true; });
+            seekSlider.addEventListener('mouseup', () => { isSeeking = false; });
+            seekSlider.addEventListener('change', (e) => {
+                if (audioPlayer.duration) {
+                    audioPlayer.currentTime = (e.target.value / 100) * audioPlayer.duration;
+                }
+                 isSeeking = false; // Just in case mouseup didn't fire
             });
         }
         
-        setupDeck(audioPlayerA, playPauseBtnA, loopBtnA, timeDisplayA, volumeSliderA);
-        setupDeck(audioPlayerB, playPauseBtnB, loopBtnB, timeDisplayB, volumeSliderB);
+        setupDeck(audioPlayerA, playPauseBtnA, loopBtnA, timeDisplayA, volumeSliderA, seekSliderA);
+        setupDeck(audioPlayerB, playPauseBtnB, loopBtnB, timeDisplayB, volumeSliderB, seekSliderB);
 
         // --- Master Control Listeners ---
         crossfader.addEventListener('input', updateCrossfader);
@@ -431,6 +630,27 @@
         closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
         settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.add('hidden'); });
         qualitySlider.addEventListener('input', updateAnalyserSettings);
+        
+        // --- Theme Selector Logic ---
+        themeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const theme = button.dataset.theme;
+                const hue = parseInt(button.dataset.hue);
+                
+                body.dataset.theme = theme;
+                currentAccentHue = hue;
+                
+                themeButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+
+        function initializeTheme() {
+            // Set 'classic' as default active button
+            document.querySelector('.theme-btn[data-theme="classic"]').classList.add('active');
+            body.dataset.theme = 'classic';
+            currentAccentHue = 175;
+        }
 
         // --- Canvas Sizing & Animation ---
         function resizeCanvas() {
@@ -461,17 +681,15 @@
         }
 
         // --- Drawing Functions ---
-        const ACCENT_HUE = 175; // Teal
-        
         function drawBars() {
-            ctx.shadowColor = `hsla(${ACCENT_HUE}, 80%, 60%, 0.5)`;
+            ctx.shadowColor = `hsla(${currentAccentHue}, 80%, 60%, 0.5)`;
             ctx.shadowBlur = 8;
             const barWidth = (canvas.width / (bufferLength * 0.8));
             for (let i = 0, x = 0; i < bufferLength; i++) {
                 const barHeight = dataArray[i] * (canvas.height / 255) * 1.1;
                 const gradient = ctx.createLinearGradient(x, canvas.height, x, canvas.height - barHeight);
-                gradient.addColorStop(0, `hsl(${ACCENT_HUE + (i/bufferLength * 50)}, 80%, 40%)`);
-                gradient.addColorStop(1, `hsl(${ACCENT_HUE + (i/bufferLength * 50) + 20}, 90%, 70%)`);
+                gradient.addColorStop(0, `hsl(${currentAccentHue + (i/bufferLength * 50)}, 80%, 40%)`);
+                gradient.addColorStop(1, `hsl(${currentAccentHue + (i/bufferLength * 50) + 20}, 90%, 70%)`);
                 ctx.fillStyle = gradient;
                 ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
                 x += barWidth;
@@ -489,11 +707,11 @@
                 const barHeight = dataArray[i] * 1.0;
                 const angle = (i / barCount) * 2 * Math.PI;
                 ctx.save(); ctx.rotate(angle);
-                ctx.shadowColor = `hsl(${ACCENT_HUE + (i/barCount * 100)}, 90%, 60%)`;
+                ctx.shadowColor = `hsl(${currentAccentHue + (i/barCount * 100)}, 90%, 60%)`;
                 ctx.shadowBlur = 10;
                 const gradient = ctx.createLinearGradient(0, 0, 0, -barHeight);
-                gradient.addColorStop(0, `hsl(${ACCENT_HUE + (i/barCount * 100)}, 90%, 60%)`);
-                gradient.addColorStop(1, `hsl(${ACCENT_HUE + (i/barCount * 100) + 40}, 70%, 50%)`);
+                gradient.addColorStop(0, `hsl(${currentAccentHue + (i/barCount * 100)}, 90%, 60%)`);
+                gradient.addColorStop(1, `hsl(${currentAccentHue + (i/barCount * 100) + 40}, 70%, 50%)`);
                 ctx.fillStyle = gradient; ctx.fillRect(0, radius, 2, barHeight);
                 ctx.restore();
             }
@@ -502,8 +720,8 @@
 
         function drawWave() {
             ctx.lineWidth = 3; 
-            ctx.strokeStyle = `hsl(${ACCENT_HUE + hue / 10}, 90%, 65%)`;
-            ctx.shadowColor = `hsl(${ACCENT_HUE + hue / 10}, 90%, 65%)`;
+            ctx.strokeStyle = `hsl(${currentAccentHue + hue / 10}, 90%, 65%)`;
+            ctx.shadowColor = `hsl(${currentAccentHue + hue / 10}, 90%, 65%)`;
             ctx.shadowBlur = 15;
             ctx.beginPath();
             const sliceWidth = canvas.width / bufferLength;
@@ -523,7 +741,7 @@
             for (let z = 1; z < lines; z++) {
                 ctx.beginPath();
                 const p = z / lines; const a = (1 - p);
-                ctx.strokeStyle = `hsla(${ACCENT_HUE + hue/5 + z * 8}, 80%, 60%, ${a})`;
+                ctx.strokeStyle = `hsla(${currentAccentHue + hue/5 + z * 8}, 80%, 60%, ${a})`;
                 ctx.lineWidth = 1.5;
                 for (let i = 0; i < bufferLength; i += step) {
                     const x = (i - bufferLength / 2) * p * 1.8;
@@ -542,7 +760,7 @@
             for (let y = 0; y < gridSize; y++) {
                 for (let x = 0; x < gridSize; x++) {
                     const i = (y * gridSize + x) * step; const val = dataArray[i] || 0;
-                    const h = val * 1.8; const hsv = ACCENT_HUE + hue + (x - y) * 4;
+                    const h = val * 1.8; const hsv = currentAccentHue + hue + (x - y) * 4;
                     const grad = ctx.createLinearGradient(x*cubeSize, -h/2, x*cubeSize, h/2);
                     grad.addColorStop(0, `hsl(${hsv}, 80%, 60%)`);
                     grad.addColorStop(1, `hsl(${hsv}, 80%, 40%)`);
@@ -560,7 +778,7 @@
             for (let i = 0; i < numBars; i++) {
                 const barWidth = dataArray[i] * 2.5;
                 const y = canvas.height - (i * barHeight);
-                const hsv = ACCENT_HUE + hue + (i / numBars * 60);
+                const hsv = currentAccentHue + hue + (i / numBars * 60);
                 const grad = ctx.createLinearGradient(centerX-barWidth/2,0,centerX+barWidth/2,0);
                 grad.addColorStop(0, `hsl(${hsv - 20}, 85%, 55%)`);
                 grad.addColorStop(0.5, `hsl(${hsv}, 95%, 75%)`);
@@ -576,7 +794,7 @@
         // Initial setup
         resizeCanvas();
         renderLibrary();
+        initializeTheme();
     </script>
 </body>
 </html>
-
