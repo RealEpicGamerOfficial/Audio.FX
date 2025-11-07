@@ -7,17 +7,17 @@ This software is CC BY-NC-SA (Creative Commons Attribution-NonCommercial-ShareAl
 ### Aditional Info
 | NAME/TAG | TYPE | VERSION NUMBER |
 |---------|------|----------------|
-| Current Package | Package Release | 1.6.0
-| Next Release | Release | 1.8.0 |
-| Next Package | Package Release | 1.8.0
+| Current Package | Package Release | 1.9.0
+| Next Release | Release | 1.10.0 |
+| Next Package | Package Release | 1.11.0
 
 ### Package Info
 | NAME/TAG | TYPE | VERSION NUMBER |
 |---------|------|----------------|
-| Current Package | Live Package  | 1.5.0
-| Next Package | Future Package | 1.8.0 
+| Current Package | Live Package  | 1.9.0
+| Next Package | Future Package | 1.11.0 
 
-### Notices
+### Notices (Visable Project)
 🤖AI was used for part or most of the code.🤖
 ✅This notice makes it comply with the VisibleProject.✅
 🛠️Code has been modified by managers, but original source code is from AI.🛠️
