@@ -53,7 +53,47 @@
             --color-danger: #ef4444;
             --color-danger-hover: #f87171;
         }
+
+        /* New "Simple4" Theme (Red base) */
+        [data-theme="simple4"] {
+            --color-bg: #111111;
+            --color-bg-panel: #1c1c1c;
+            --color-border: #282828;
+            --color-text: #f1f1f1;
+            --color-text-muted: #a0a0a0;
+            --color-accent: #e63946; /* Red */
+            --color-accent-dark: #b82c37;
+            --color-accent-text: #ffffff;
+            --color-accent-shadow: rgba(230, 57, 70, 0.5);
+            --color-danger: #e63946;
+            --color-danger-hover: #f15a65;
+        }
         /* --- End Theme Definitions --- */
+
+        /* --- Setup-Specific Overrides --- */
+
+        /* "Simple4" Setup: Multi-color highlights */
+        [data-setup="simple4"] #deck-a .deck-header,
+        [data-setup="simple4"] #deck-a .seek-slider::-webkit-slider-thumb,
+        [data-setup="simple4"] #deck-a .seek-slider {
+            --color-accent: #e63946; /* Red */
+        }
+        [data-setup="simple4"] #deck-b .deck-header,
+        [data-setup="simple4"] #deck-b .seek-slider::-webkit-slider-thumb,
+        [data-setup="simple4"] #deck-b .seek-slider {
+            --color-accent: #0077b6; /* Blue */
+        }
+        [data-setup="simple4"] .control-button.active {
+            background-color: #70e000 !important; /* Green */
+            border-color: #70e000 !important;
+            color: #111 !important;
+            box-shadow: 0 0 20px rgba(112, 224, 0, 0.5) !important;
+        }
+        [data-setup="simple4"] #library-container {
+            border-color: #ffdd00; /* Yellow */
+        }
+        /* --- End Setup Overrides --- */
+
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -243,7 +283,9 @@
             <h2 class="deck-header">DECK A</h2>
             <div id="song-info-a" class="song-info">No Track Loaded</div>
             <div id="time-display-a" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            <!-- Timeline / Seek Slider -->
             <input type="range" id="seek-slider-a" class="w-full seek-slider" min="0" max="100" step="0.1" value="0">
+            <!-- Volume Slider -->
             <input type="range" id="volume-a" class="w-full" min="0" max="1" step="0.01" value="1">
             <div class="flex items-center justify-center gap-3">
                 <button id="play-pause-a" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center"><span class="material-symbols-outlined">play_arrow</span></button>
@@ -282,7 +324,9 @@
             <h2 class="deck-header">DECK B</h2>
             <div id="song-info-b" class="song-info">No Track Loaded</div>
             <div id="time-display-b" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            <!-- Timeline / Seek Slider -->
             <input type="range" id="seek-slider-b" class="w-full seek-slider" min="0" max="100" step="0.1" value="0">
+            <!-- Volume Slider -->
             <input type="range" id="volume-b" class="w-full" min="0" max="1" step="0.01" value="1">
             <div class="flex items-center justify-center gap-3">
                 <button id="play-pause-b" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center" disabled><span class="material-symbols-outlined">play_arrow</span></button>
@@ -296,15 +340,18 @@
         <div class="flex justify-between items-center mb-3">
             <h2 class="text-xl font-bold">Library</h2>
             <input type="file" id="library-file-input" accept="audio/*,video/mp4" class="hidden" multiple>
+            <!-- ADDED THIS LABEL BACK -->
             <label for="library-file-input" class="control-button flex items-center gap-2 font-semibold py-2 px-4 rounded-lg"><span class="material-symbols-outlined text-base">add</span> Add to Library</label>
-        </div>
+        </div> <!-- CLOSED THIS DIV -->
+        
+        <!-- ADDED THIS ENTIRE BLOCK BACK -->
         <div class="flex-grow overflow-y-auto min-h-0">
             <ul id="library-list">
                 <li class="empty-library-msg">Your library is empty.</li>
             </ul>
         </div>
-    </div>
-    
+    </div> <!-- CLOSED THIS DIV -->
+
     <!-- Settings Modal -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
         <div class="component-panel p-6 w-full max-w-md flex flex-col gap-6">
@@ -314,11 +361,21 @@
             </div>
             
             <div>
+                <h3 class="text-lg font-semibold mb-3">Setup</h3>
+                <div id="setup-selector" class="flex gap-3">
+                    <button class="setup-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-setup="modern">Modern</button>
+                    <button class="setup-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-setup="american-pro">American Pro</button>
+                    <button class="setup-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-setup="simple4">Simple4</button>
+                </div>
+            </div>
+
+            <div>
                 <h3 class="text-lg font-semibold mb-3">Theme</h3>
                 <div id="theme-selector" class="flex gap-3">
                     <button class="theme-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-theme="classic" data-hue="175">Classic</button>
                     <button class="theme-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-theme="american" data-hue="356">American</button>
                     <button class="theme-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-theme="pro" data-hue="46">Pro</button>
+                    <!-- Simple4 theme is applied by its setup, so no button is needed here unless you want to select it independently -->
                 </div>
             </div>
 
@@ -371,6 +428,7 @@
         const qualitySlider = document.getElementById('quality-slider');
         const qualityLabel = document.getElementById('quality-label');
         const themeButtons = document.querySelectorAll('.theme-btn');
+        const setupButtons = document.querySelectorAll('.setup-btn');
 
         // Deck A Elements
         const audioPlayerA = document.getElementById('audioPlayerA');
@@ -429,7 +487,8 @@
 
             } catch (e) {
                 console.error("Error initializing AudioContext:", e);
-                alert("Sorry, your browser doesn't support the Web Audio API.");
+                // Using an alternative message since alert() is restricted
+                console.error("Sorry, your browser doesn't support the Web Audio API.");
             }
         }
 
@@ -574,11 +633,22 @@
             // --- Seek Slider Events ---
             seekSlider.addEventListener('mousedown', () => { isSeeking = true; });
             seekSlider.addEventListener('mouseup', () => { isSeeking = false; });
-            seekSlider.addEventListener('change', (e) => {
-                if (audioPlayer.duration) {
-                    audioPlayer.currentTime = (e.target.value / 100) * audioPlayer.duration;
+            
+            // This handles live scrubbing as the user drags
+            seekSlider.addEventListener('input', (e) => {
+                if (isSeeking && audioPlayer.duration) {
+                    const progress = parseFloat(e.target.value);
+                    // Calculate and set new time
+                    audioPlayer.currentTime = (progress / 100) * audioPlayer.duration;
+                    // Update track fill and time display instantly
+                    seekSlider.style.background = `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) ${progress}%, var(--color-border) ${progress}%, var(--color-border) 100%)`;
+                    timeDisplay.textContent = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`;
                 }
-                 isSeeking = false; // Just in case mouseup didn't fire
+            });
+            
+            // This handles the final position when the user releases the slider
+            seekSlider.addEventListener('change', () => {
+                 isSeeking = false;
             });
         }
         
@@ -615,7 +685,7 @@
 
         fullscreenBtn.addEventListener('click', () => {
             if (document.fullscreenElement) document.exitFullscreen();
-            else canvasContainer.requestFullscreen().catch(err => alert(`Fullscreen error: ${err.message}`));
+            else canvasContainer.requestFullscreen().catch(err => console.error(`Fullscreen error: ${err.message}`));
         });
 
         modeButtons.forEach(button => {
@@ -634,22 +704,52 @@
         // --- Theme Selector Logic ---
         themeButtons.forEach(button => {
             button.addEventListener('click', () => {
+                // Manually changing theme disconnects it from setup
                 const theme = button.dataset.theme;
                 const hue = parseInt(button.dataset.hue);
-                
-                body.dataset.theme = theme;
-                currentAccentHue = hue;
-                
-                themeButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
+                applyTheme(theme, hue);
+
+                // Clear active setup
+                body.dataset.setup = "";
+                setupButtons.forEach(btn => btn.classList.remove('active'));
             });
         });
+        
+        setupButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                applySetup(button.dataset.setup);
+            });
+        });
+        
+        function applyTheme(themeName, hueValue) {
+            body.dataset.theme = themeName;
+            currentAccentHue = hueValue;
+            
+            themeButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === themeName);
+            });
+        }
+        
+        function applySetup(setupName) {
+            body.dataset.setup = setupName;
+            
+            setupButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.setup === setupName);
+            });
 
-        function initializeTheme() {
-            // Set 'classic' as default active button
-            document.querySelector('.theme-btn[data-theme="classic"]').classList.add('active');
-            body.dataset.theme = 'classic';
-            currentAccentHue = 175;
+            // Link setups to themes
+            if (setupName === 'modern') {
+                applyTheme('classic', 175);
+            } else if (setupName === 'american-pro') {
+                applyTheme('american', 356);
+            } else if (setupName === 'simple4') {
+                applyTheme('simple4', 356); // Use red's hue (356) for base accent
+            }
+        }
+
+        function initializeSetup() {
+            // Set 'american-pro' as the new default
+            applySetup('american-pro');
         }
 
         // --- Canvas Sizing & Animation ---
@@ -765,7 +865,7 @@
                     grad.addColorStop(0, `hsl(${hsv}, 80%, 60%)`);
                     grad.addColorStop(1, `hsl(${hsv}, 80%, 40%)`);
                     ctx.fillStyle = grad;
-                    ctx.fillRect(x*cubeSize, -h/2, cubeSize - 1, h);
+                    ctx.fillRect(x*cubeSiz, -h/2, cubeSize - 1, h);
                 }
             }
             ctx.restore();
@@ -794,7 +894,7 @@
         // Initial setup
         resizeCanvas();
         renderLibrary();
-        initializeTheme();
+        initializeSetup(); // Was initializeTheme()
     </script>
 </body>
 </html>
