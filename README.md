@@ -17,9 +17,11 @@ This software is CC BY-NC-SA (Creative Commons Attribution-NonCommercial-ShareAl
 | Current Package | Live Package  | 1.9.0
 | Next Package | Future Package | 1.11.0 
 
-### Notices (Visable Project)
+### Notices (VisableProject)
 🤖AI was used for part or most of the code.🤖
-✅This notice makes it comply with the VisibleProject.✅
-🛠️Code has been modified by managers, but original source code is from AI.🛠️
 
-For more info, please visit "*link coming soon*".
+✅This notice makes it comply with the VisibleProject.✅
+
+🛠️AI was used for a starting base, many lines had to be fix or changed to provide funcionality.🛠️
+
+For more info, please visit [Visible Project](https://sites.google.com/view/visible-project/home). 
