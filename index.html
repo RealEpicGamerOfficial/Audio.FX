@@ -104,6 +104,19 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* Styles for Screen Readers only (Accessibility) */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
         /* --- Custom Scrollbar Styling --- */
         ::-webkit-scrollbar {
             width: 10px;
@@ -265,6 +278,17 @@
             background: var(--color-accent-dark);
         }
 
+        /* --- FX Slider Styling --- */
+        /* Using default range slider for FX */
+        .deck-fx-label {
+            color: var(--color-text-muted);
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            letter-spacing: 0.05em; /* tracking-wider */
+            text-transform: uppercase;
+            margin-top: 0.5rem; /* mt-2 */
+        }
+
     </style>
 </head>
 <body class="flex flex-col p-4 gap-4" data-theme="classic"> <!-- Removed h-screen -->
@@ -283,10 +307,30 @@
             <h2 class="deck-header">DECK A</h2>
             <div id="song-info-a" class="song-info">No Track Loaded</div>
             <div id="time-display-a" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            
             <!-- Timeline / Seek Slider -->
+            <label for="seek-slider-a" class="sr-only">Track Seek Position A</label>
             <input type="range" id="seek-slider-a" class="w-full seek-slider" min="0" max="100" step="0.1" value="0">
+            
             <!-- Volume Slider -->
+            <label for="volume-a" class="deck-fx-label">Volume A</label>
             <input type="range" id="volume-a" class="w-full" min="0" max="1" step="0.01" value="1">
+            
+            <!-- MusicMix Plug-In (Deck A) - NEW FX ADDED HERE -->
+            <div id="musicmix-a" class="hidden flex flex-col gap-2">
+                <label for="delay-a" class="deck-fx-label">Echo Feedback (A)</label>
+                <input type="range" id="delay-a" class="w-full" min="0" max="0.8" step="0.01" value="0">
+                
+                <label for="distort-a" class="deck-fx-label">Distortion Amount (A)</label>
+                <input type="range" id="distort-a" class="w-full" min="0" max="100" step="1" value="0">
+
+                <label for="cutoff-a" class="deck-fx-label">Filter Cutoff (Hz)</label>
+                <input type="range" id="cutoff-a" class="w-full" min="100" max="20000" step="100" value="20000">
+
+                <label for="panner-a" class="deck-fx-label">Stereo Panner (L/R)</label>
+                <input type="range" id="panner-a" class="w-full" min="-1" max="1" step="0.01" value="0">
+            </div>
+            
             <div class="flex items-center justify-center gap-3">
                 <button id="play-pause-a" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center"><span class="material-symbols-outlined">play_arrow</span></button>
                 <button id="loop-a" class="deck-button control-button text-white p-3 rounded-full flex justify-center items-center"><span class="material-symbols-outlined">repeat</span></button>
@@ -296,9 +340,9 @@
         <!-- Master Controls -->
         <div id="master-controls" class="component-panel p-4 w-full flex flex-col items-center justify-between gap-4">
             <div class="flex flex-col items-center justify-center w-full gap-2">
-                <label class="text-xs font-semibold tracking-wider uppercase">Master Vol</label>
+                <label for="master-volume" class="text-xs font-semibold tracking-wider uppercase">Master Vol</label>
                 <input type="range" id="master-volume" class="w-full" min="0" max="1" step="0.01" value="1">
-                <label class="text-xs font-semibold tracking-wider uppercase mt-2">Balance</label>
+                <label for="crossfader" class="text-xs font-semibold tracking-wider uppercase mt-2">Balance</label>
                 <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5" class="w-full">
             </div>
             <div class="flex items-center gap-2 flex-wrap justify-center">
@@ -317,6 +361,18 @@
                     <input type="range" id="speed-slider" min="0" max="1" step="0.05" value="0.2" class="w-24">
                 </div>
             </div>
+            
+            <!-- MiniWidget Plug-In (NEW) -->
+            <div id="miniwidget" class="hidden flex items-center justify-around w-full gap-4 pt-4 mt-4 border-t border-[var(--color-border)]">
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="material-symbols-outlined text-base" style="font-size: 1.25rem;">schedule</span>
+                    <span id="time-display-widget" class="font-mono">--:--:--</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span id="battery-icon-widget" class="material-symbols-outlined text-base" style="font-size: 1.25rem;">battery_unknown</span>
+                    <span id="battery-display-widget" class="font-mono">--%</span>
+                </div>
+            </div>
         </div>
 
         <!-- Deck B -->
@@ -324,10 +380,30 @@
             <h2 class="deck-header">DECK B</h2>
             <div id="song-info-b" class="song-info">No Track Loaded</div>
             <div id="time-display-b" class="text-center font-mono text-lg">0:00 / 0:00</div>
+            
             <!-- Timeline / Seek Slider -->
+            <label for="seek-slider-b" class="sr-only">Track Seek Position B</label>
             <input type="range" id="seek-slider-b" class="w-full seek-slider" min="0" max="100" step="0.1" value="0">
+            
             <!-- Volume Slider -->
+            <label for="volume-b" class="deck-fx-label">Volume B</label>
             <input type="range" id="volume-b" class="w-full" min="0" max="1" step="0.01" value="1">
+
+            <!-- MusicMix Plug-In (Deck B) - NEW FX ADDED HERE -->
+            <div id="musicmix-b" class="hidden flex flex-col gap-2">
+                <label for="delay-b" class="deck-fx-label">Echo Feedback (B)</label>
+                <input type="range" id="delay-b" class="w-full" min="0" max="0.8" step="0.01" value="0">
+                
+                <label for="distort-b" class="deck-fx-label">Distortion Amount (B)</label>
+                <input type="range" id="distort-b" class="w-full" min="0" max="100" step="1" value="0">
+
+                <label for="cutoff-b" class="deck-fx-label">Filter Cutoff (Hz)</label>
+                <input type="range" id="cutoff-b" class="w-full" min="100" max="20000" step="100" value="20000">
+
+                <label for="panner-b" class="deck-fx-label">Stereo Panner (L/R)</label>
+                <input type="range" id="panner-b" class="w-full" min="-1" max="1" step="0.01" value="0">
+            </div>
+
             <div class="flex items-center justify-center gap-3">
                 <button id="play-pause-b" class="play-pause-btn control-button text-white font-bold p-3 rounded-full flex-grow flex justify-center items-center" disabled><span class="material-symbols-outlined">play_arrow</span></button>
                 <button id="loop-b" class="deck-button control-button text-white p-3 rounded-full flex justify-center items-center"><span class="material-symbols-outlined">repeat</span></button>
@@ -340,17 +416,14 @@
         <div class="flex justify-between items-center mb-3">
             <h2 class="text-xl font-bold">Library</h2>
             <input type="file" id="library-file-input" accept="audio/*,video/mp4" class="hidden" multiple>
-            <!-- ADDED THIS LABEL BACK -->
             <label for="library-file-input" class="control-button flex items-center gap-2 font-semibold py-2 px-4 rounded-lg"><span class="material-symbols-outlined text-base">add</span> Add to Library</label>
-        </div> <!-- CLOSED THIS DIV -->
-        
-        <!-- ADDED THIS ENTIRE BLOCK BACK -->
+        </div>
         <div class="flex-grow overflow-y-auto min-h-0">
             <ul id="library-list">
                 <li class="empty-library-msg">Your library is empty.</li>
             </ul>
         </div>
-    </div> <!-- CLOSED THIS DIV -->
+    </div>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
@@ -366,6 +439,27 @@
                     <button class="setup-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-setup="modern">Modern</button>
                     <button class="setup-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-setup="american-pro">American Pro</button>
                     <button class="setup-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-setup="simple4">Simple4</button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Mode</h3>
+                <div id="mode-selector" class="flex gap-3">
+                    <button class="mode-select-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-mode="classic">Classic</button>
+                    <button class="mode-select-btn control-button w-full text-center block py-2 px-4 rounded-lg" data-mode="double-channel">Double-Channel</button>
+                </div>
+            </div>
+
+            <!-- Plug-In Toggles -->
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Plug-Ins</h3>
+                <div class="flex flex-col gap-3">
+                    <button id="toggle-musicmix-btn" class="control-button w-full text-center block py-2 px-4 rounded-lg" data-plugin="musicmix">
+                        MusicMix FX (Hidden)
+                    </button>
+                    <button id="toggle-miniwidget-btn" class="control-button w-full text-center block py-2 px-4 rounded-lg" data-plugin="miniwidget">
+                        MiniWidget (Hidden)
+                    </button>
                 </div>
             </div>
 
@@ -391,10 +485,23 @@
             <div>
                 <h3 class="text-lg font-semibold mb-3">Quality</h3>
                 <div class="flex items-center gap-3">
+                    <label for="quality-slider" class="sr-only">Visualizer Quality Setting</label>
                     <input type="range" id="quality-slider" min="1" max="100" value="50" class="w-full">
                     <span id="quality-label" class="font-mono text-sm w-20 text-center bg-gray-900/50 py-1 rounded">HD</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Privacy Modal -->
+    <div id="privacy-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60]">
+        <div class="component-panel p-6 w-full max-w-md flex flex-col gap-6">
+            <h2 class="text-2xl font-bold text-center">We respect your privacy at American Remixing</h2>
+            <div class="text-sm text-gray-300 space-y-4">
+                <p>This PWA has <span class="font-bold">NO trackers*</span> and doesn't store data about its users.</p>
+                <p class="text-xs italic">*This product uses Google's Icons, so one tracker may happen, but no trackers were purposely added in.</p>
+            </div>
+            <button id="close-privacy-btn" class="control-button active w-full text-center block py-2 px-4 rounded-lg">Got it!</button>
         </div>
     </div>
 
@@ -429,6 +536,8 @@
         const qualityLabel = document.getElementById('quality-label');
         const themeButtons = document.querySelectorAll('.theme-btn');
         const setupButtons = document.querySelectorAll('.setup-btn');
+        const privacyModal = document.getElementById('privacy-modal');
+        const closePrivacyBtn = document.getElementById('close-privacy-btn');
 
         // Deck A Elements
         const audioPlayerA = document.getElementById('audioPlayerA');
@@ -438,6 +547,10 @@
         const timeDisplayA = document.getElementById('time-display-a');
         const volumeSliderA = document.getElementById('volume-a');
         const seekSliderA = document.getElementById('seek-slider-a');
+        const delaySliderA = document.getElementById('delay-a');
+        const distortSliderA = document.getElementById('distort-a');
+        const cutoffSliderA = document.getElementById('cutoff-a'); // NEW FX
+        const pannerSliderA = document.getElementById('panner-a'); // NEW FX
 
         // Deck B Elements
         const audioPlayerB = document.getElementById('audioPlayerB');
@@ -447,15 +560,37 @@
         const timeDisplayB = document.getElementById('time-display-b');
         const volumeSliderB = document.getElementById('volume-b');
         const seekSliderB = document.getElementById('seek-slider-b');
+        const delaySliderB = document.getElementById('delay-b');
+        const distortSliderB = document.getElementById('distort-b');
+        const cutoffSliderB = document.getElementById('cutoff-b'); // NEW FX
+        const pannerSliderB = document.getElementById('panner-b'); // NEW FX
+
+        // MiniWidget Plug-In Elements
+        const timeDisplayWidget = document.getElementById('time-display-widget');
+        const batteryDisplayWidget = document.getElementById('battery-display-widget');
+        const batteryIconWidget = document.getElementById('battery-icon-widget');
+
+        // NEW: Plug-In UI Containers and Toggles
+        const toggleMusicMixBtn = document.getElementById('toggle-musicmix-btn');
+        const toggleMiniWidgetBtn = document.getElementById('toggle-miniwidget-btn');
+        const musicMixA = document.getElementById('musicmix-a');
+        const musicMixB = document.getElementById('musicmix-b');
+        const miniWidget = document.getElementById('miniwidget');
 
         // --- State Management ---
-        let audioContext, analyser, sourceA, sourceB, gainA, gainB, masterGain, dataArray, bufferLength;
+        let audioContext, analyser, sourceA, sourceB, gainA, gainB, masterGain, dataArray, bufferLength, micSource;
+        // MusicMix Plug-In Nodes
+        let delayNodeA, feedbackNodeA, waveShaperA, filterNodeA, pannerNodeA; // Filter and Panner added
+        let delayNodeB, feedbackNodeB, waveShaperB, filterNodeB, pannerNodeB; // Filter and Panner added
+        
         let currentMode = 'bars';
         let hue = 0;
         let gradientSpeed = 0.2;
         let animationFrameId;
         let musicLibrary = [];
         let currentAccentHue = 175; // Default (Classic theme hue)
+        // NEW: Plug-In State
+        let pluginState = { musicmix: false, miniwidget: false };
 
         // --- Helper Functions ---
         const formatTime = (seconds) => {
@@ -463,6 +598,21 @@
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = Math.floor(seconds % 60);
             return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+        };
+
+        // MusicMix Plug-In: Distortion Curve
+        function makeDistortionCurve(amount) {
+            let k = typeof amount === 'number' ? amount : 50;
+            let n_samples = 44100;
+            let curve = new Float32Array(n_samples);
+            let deg = Math.PI / 180;
+            let i = 0;
+            let x;
+            for ( ; i < n_samples; ++i ) {
+                x = i * 2 / n_samples - 1;
+                curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+            }
+            return curve;
         };
 
         // --- Audio Initialization ---
@@ -479,9 +629,75 @@
                 gainB = audioContext.createGain();
                 masterGain = audioContext.createGain();
 
-                sourceA.connect(gainA).connect(analyser);
-                sourceB.connect(gainB).connect(analyser);
-                analyser.connect(masterGain).connect(audioContext.destination);
+                // --- MusicMix Plug-In: Create FX Nodes ---
+                
+                // Deck A FX
+                delayNodeA = audioContext.createDelay(1.0);
+                feedbackNodeA = audioContext.createGain();
+                waveShaperA = audioContext.createWaveShaper();
+                filterNodeA = audioContext.createBiquadFilter(); // NEW: Filter
+                pannerNodeA = audioContext.createStereoPanner(); // NEW: Panner
+                
+                // Deck B FX
+                delayNodeB = audioContext.createDelay(1.0);
+                feedbackNodeB = audioContext.createGain();
+                waveShaperB = audioContext.createWaveShaper();
+                filterNodeB = audioContext.createBiquadFilter(); // NEW: Filter
+                pannerNodeB = audioContext.createStereoPanner(); // NEW: Panner
+
+                // Set initial FX values
+                // Delay/Distort defaults (from previous implementation)
+                delayNodeA.delayTime.value = 0.5;
+                feedbackNodeA.gain.value = 0;
+                waveShaperA.curve = makeDistortionCurve(0);
+                delayNodeB.delayTime.value = 0.5;
+                feedbackNodeB.gain.value = 0;
+                waveShaperB.curve = makeDistortionCurve(0);
+                
+                // NEW FX defaults
+                filterNodeA.type = 'lowpass';
+                filterNodeA.frequency.value = 20000; // Max frequency = no filter effect initially
+                pannerNodeA.pan.value = 0; // Center
+                filterNodeB.type = 'lowpass';
+                filterNodeB.frequency.value = 20000;
+                pannerNodeB.pan.value = 0;
+
+                // --- Audio Graph Setup (New Chain) ---
+                
+                // Deck A Path: sourceA -> gainA -> delayA (dry path) / delayA (feedback loop)
+                sourceA.connect(gainA);
+                gainA.connect(delayNodeA);
+
+                // Deck A FX Chain: delayNodeA (output) -> waveShaperA -> filterNodeA -> pannerNodeA
+                delayNodeA.connect(waveShaperA);
+                waveShaperA.connect(filterNodeA);
+                filterNodeA.connect(pannerNodeA);
+                
+                // Deck A Feedback Loop
+                delayNodeA.connect(feedbackNodeA);
+                feedbackNodeA.connect(delayNodeA);
+
+                // Deck B Path: sourceB -> gainB -> delayB (dry path) / delayB (feedback loop)
+                sourceB.connect(gainB);
+                gainB.connect(delayNodeB);
+
+                // Deck B FX Chain: delayNodeB (output) -> waveShaperB -> filterNodeB -> pannerNodeB
+                delayNodeB.connect(waveShaperB);
+                waveShaperB.connect(filterNodeB);
+                filterNodeB.connect(pannerNodeB);
+
+                // Deck B Feedback Loop
+                delayNodeB.connect(feedbackNodeB);
+                feedbackNodeB.connect(delayNodeB);
+
+                // 1. Playback Path (Panner -> Master -> Speakers)
+                pannerNodeA.connect(masterGain);
+                pannerNodeB.connect(masterGain);
+                masterGain.connect(audioContext.destination);
+                
+                // 2. Visualization Path (Panner -> Analyser)
+                pannerNodeA.connect(analyser);
+                pannerNodeB.connect(analyser);
                 
                 updateCrossfader();
 
@@ -655,6 +871,37 @@
         setupDeck(audioPlayerA, playPauseBtnA, loopBtnA, timeDisplayA, volumeSliderA, seekSliderA);
         setupDeck(audioPlayerB, playPauseBtnB, loopBtnB, timeDisplayB, volumeSliderB, seekSliderB);
 
+        // --- MusicMix Plug-In: FX Control Listeners (UPDATED) ---
+        
+        // Deck A FX
+        delaySliderA.addEventListener('input', (e) => {
+            if (feedbackNodeA) feedbackNodeA.gain.value = parseFloat(e.target.value);
+        });
+        distortSliderA.addEventListener('input', (e) => {
+            if (waveShaperA) waveShaperA.curve = makeDistortionCurve(parseFloat(e.target.value));
+        });
+        cutoffSliderA.addEventListener('input', (e) => { // NEW FX: Filter
+            if (filterNodeA) filterNodeA.frequency.value = parseFloat(e.target.value);
+        });
+        pannerSliderA.addEventListener('input', (e) => { // NEW FX: Panner
+            if (pannerNodeA) pannerNodeA.pan.value = parseFloat(e.target.value);
+        });
+
+        // Deck B FX
+        delaySliderB.addEventListener('input', (e) => {
+            if (feedbackNodeB) feedbackNodeB.gain.value = parseFloat(e.target.value);
+        });
+        distortSliderB.addEventListener('input', (e) => {
+            if (waveShaperB) waveShaperB.curve = makeDistortionCurve(parseFloat(e.target.value));
+        });
+        cutoffSliderB.addEventListener('input', (e) => { // NEW FX: Filter
+            if (filterNodeB) filterNodeB.frequency.value = parseFloat(e.target.value);
+        });
+        pannerSliderB.addEventListener('input', (e) => { // NEW FX: Panner
+            if (pannerNodeB) pannerNodeB.pan.value = parseFloat(e.target.value);
+        });
+
+
         // --- Master Control Listeners ---
         crossfader.addEventListener('input', updateCrossfader);
         speedSlider.addEventListener('input', (e) => gradientSpeed = parseFloat(e.target.value));
@@ -701,6 +948,16 @@
         settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.add('hidden'); });
         qualitySlider.addEventListener('input', updateAnalyserSettings);
         
+        // --- Privacy Modal Listener ---
+        closePrivacyBtn.addEventListener('click', () => {
+            privacyModal.classList.add('hidden');
+            try {
+                localStorage.setItem('privacySeen', 'true');
+            } catch (e) {
+                console.warn("localStorage is not available.");
+            }
+        });
+
         // --- Theme Selector Logic ---
         themeButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -747,9 +1004,178 @@
             }
         }
 
+        async function applyMode(modeName) { // Made async for mic
+            if (!audioContext) initializeAudio();
+
+            // First, disconnect mic if it exists, to reset
+            if (micSource) {
+                try {
+                    micSource.disconnect(analyser);
+                } catch (e) {
+                    console.warn("Mic already disconnected in applyMode.");
+                }
+            }
+            
+            if (modeName === 'classic') {
+                // Music is already connected to analyser by default,
+                // and we just disconnected the mic. So, we're done.
+                console.log("Mode: Classic (Music Only)");
+            } else if (modeName === 'double-channel') {
+                console.log("Mode: Double-Channel (Music + Mic)");
+                if (!micSource) {
+                    // Mic source doesn't exist, try to create it
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        micSource = audioContext.createMediaStreamSource(stream);
+                        micSource.connect(analyser);
+                        console.log("Microphone connected.");
+                    } catch (err) {
+                        console.error("Error getting microphone:", err);
+                        // Using an alternative message since alert() is restricted
+                        console.error("Could not access microphone. Reverting to Classic mode.");
+                        // Revert UI back to classic
+                        modeName = 'classic';
+                    }
+                } else {
+                    // Mic source already exists, just reconnect it
+                    micSource.connect(analyser);
+                    console.log("Microphone re-connected.");
+                }
+            }
+
+            // Update active button
+            const modeSelectButtons = settingsModal.querySelectorAll('.mode-select-btn');
+            modeSelectButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === modeName);
+            });
+        }
+
+        // --- MiniWidget Plug-In: Functions ---
+        function updateTimeWidget() {
+            const now = new Date();
+            timeDisplayWidget.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function updateBatteryWidget() {
+            if (!('getBattery' in navigator)) {
+                batteryDisplayWidget.textContent = "N/A";
+                batteryIconWidget.textContent = "battery_unknown";
+                return;
+            }
+            
+            try {
+                const battery = await navigator.getBattery();
+                
+                function updateLevel() {
+                    const level = Math.floor(battery.level * 100);
+                    batteryDisplayWidget.textContent = `${level}%`;
+                    
+                    if (battery.charging) {
+                        batteryIconWidget.textContent = "battery_charging_full";
+                    } else if (level > 90) {
+                        batteryIconWidget.textContent = "battery_full";
+                    } else if (level > 60) {
+                        batteryIconWidget.textContent = "battery_std"; // A good "medium" icon
+                    } else if (level > 30) {
+                        batteryIconWidget.textContent = "battery_half";
+                    } else if (level > 10) {
+                        batteryIconWidget.textContent = "battery_low";
+                    } else {
+                        batteryIconWidget.textContent = "battery_alert";
+                    }
+                }
+                
+                updateLevel();
+                battery.onlevelchange = updateLevel;
+                battery.onchargingchange = updateLevel;
+
+            } catch (err) {
+                console.error("Error getting battery status:", err);
+                batteryDisplayWidget.textContent = "Error";
+                batteryIconWidget.textContent = "battery_error";
+            }
+        }
+
+        // --- NEW: Plug-In Toggle Logic ---
+        function setPluginState(pluginName, isEnabled) {
+            pluginState[pluginName] = isEnabled;
+            try {
+                localStorage.setItem('pluginState', JSON.stringify(pluginState));
+            } catch (e) {
+                console.warn("localStorage is not available. Plug-in settings won't be saved.");
+            }
+
+            if (pluginName === 'musicmix') {
+                toggleMusicMixBtn.classList.toggle('active', isEnabled);
+                toggleMusicMixBtn.textContent = isEnabled ? 'MusicMix FX (Visible)' : 'MusicMix FX (Hidden)';
+                musicMixA.classList.toggle('hidden', !isEnabled);
+                musicMixB.classList.toggle('hidden', !isEnabled);
+            } else if (pluginName === 'miniwidget') {
+                toggleMiniWidgetBtn.classList.toggle('active', isEnabled);
+                toggleMiniWidgetBtn.textContent = isEnabled ? 'MiniWidget (Visible)' : 'MiniWidget (Hidden)';
+                miniWidget.classList.toggle('hidden', !isEnabled);
+            }
+        }
+
+        toggleMusicMixBtn.addEventListener('click', () => {
+            setPluginState('musicmix', !pluginState.musicmix);
+        });
+        toggleMiniWidgetBtn.addEventListener('click', () => {
+            setPluginState('miniwidget', !pluginState.miniwidget);
+        });
+        // --- End Plug-In Logic ---
+
+
         function initializeSetup() {
+            // Load Plug-In State FIRST
+            try {
+                const savedPlugins = localStorage.getItem('pluginState');
+                if (savedPlugins) {
+                    pluginState = JSON.parse(savedPlugins);
+                }
+            } catch (e) {
+                console.error("Could not parse plugin state", e);
+                pluginState = { musicmix: false, miniwidget: false };
+            }
+            // Set initial state from loaded data (defaults are false)
+            setPluginState('musicmix', pluginState.musicmix); 
+            setPluginState('miniwidget', pluginState.miniwidget);
+
+
             // Set 'american-pro' as the new default
             applySetup('american-pro');
+            
+            // Set 'classic' as the default mode
+            const modeSelectButtons = settingsModal.querySelectorAll('.mode-select-btn');
+            let defaultMode = 'classic';
+            applyMode(defaultMode);
+            
+            // Update the UI of the buttons in settings
+            modeSelectButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === defaultMode);
+            });
+
+            // Add listeners to the mode buttons
+            modeSelectButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modeName = button.dataset.mode;
+                    applyMode(modeName);
+                });
+            });
+
+            // Check for privacy modal
+            try {
+                if (localStorage.getItem('privacySeen') !== 'true') {
+                    privacyModal.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.warn("localStorage is not available. Skipping privacy check.");
+            }
+            
+            // --- Initialize MiniWidget ---
+            updateTimeWidget();
+            setInterval(updateTimeWidget, 1000); // Update time every second
+            updateBatteryWidget();
         }
 
         // --- Canvas Sizing & Animation ---
@@ -760,7 +1186,9 @@
         window.addEventListener('resize', resizeCanvas);
         
         function animate() {
-            if (audioPlayerA.paused && audioPlayerB.paused) {
+            // Only continue the animation loop if at least one player is active/playing
+            if (audioPlayerA.paused && audioPlayerB.paused && !micSource) {
+                 // Check micSource state as well, but generally we stop animating if no audio is moving
                 animationFrameId = null;
                 return;
             }
@@ -865,7 +1293,7 @@
                     grad.addColorStop(0, `hsl(${hsv}, 80%, 60%)`);
                     grad.addColorStop(1, `hsl(${hsv}, 80%, 40%)`);
                     ctx.fillStyle = grad;
-                    ctx.fillRect(x*cubeSiz, -h/2, cubeSize - 1, h);
+                    ctx.fillRect(x*cubeSize, -h/2, cubeSize - 1, h);
                 }
             }
             ctx.restore();
@@ -894,7 +1322,7 @@
         // Initial setup
         resizeCanvas();
         renderLibrary();
-        initializeSetup(); // Was initializeTheme()
+        initializeSetup();
     </script>
 </body>
 </html>
